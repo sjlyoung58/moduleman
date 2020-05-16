@@ -1,6 +1,7 @@
 testjournals/*.log
 testjournals/*.json
 testjournals/*.cache
+*/.DS_Store
 
 # Logs
 logs
