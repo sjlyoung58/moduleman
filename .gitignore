@@ -1,4 +1,6 @@
-testjournals
+testjournals/*.log
+testjournals/*.json
+testjournals/*.cache
 
 # Logs
 logs
