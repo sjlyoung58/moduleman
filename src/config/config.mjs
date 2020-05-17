@@ -9,6 +9,8 @@ config.eddn = {};
 // config.twitter.user_name = process.env.TWITTER_USER || 'username';
 // config.twitter.password=  process.env.TWITTER_PASSWORD || 'password';
 
+config.db.path = './db/journal.sqlite3';
+
 config.db.user = 'simonyoung';
 config.db.host = '192.168.1.80';
 config.db.database = 'simonyoung';

@@ -1,18 +1,20 @@
+/* eslint-disable import/extensions */
 /* eslint-disable no-console */
 import fs from 'fs';
 import lineReader from 'line-reader';
+// import sqlite3 from 'sqlite3';
 // import path from 'path';
 // import datetime from 'node-datetime';
 // import zlib from 'zlib';
 // import URLSafeBase64 from 'urlsafe-base64';
 
-// eslint-disable-next-line import/extensions
 import config from './config/config.mjs';
 
-// const output = fs.readFileSync('testjournals/Cargo.json');
+import AppDAO from './db/dao.mjs';
 
-// console.log(config.db.user);
-// console.log(output.toString());
+const dao = new AppDAO(config.db.path);
+
+console.log(dao.toString());
 
 fs.readdir(config.jnlpath, (err, files) => {
   if (err) {
@@ -21,7 +23,8 @@ fs.readdir(config.jnlpath, (err, files) => {
     files.forEach((file) => {
       const nameParts = file.split('.');
       // if (nameParts[0] === 'Journal') {
-      if (nameParts[0] === 'Journal' && nameParts[1] > '179999999999') { // only journals from 2018 onwards
+      if (nameParts[0] === 'Journal' && nameParts[1] > '199999999999') { // only journals from 2018 onwards
+      // if (nameParts[0] === 'Journal' && nameParts[1] > '200508000000') {
         console.log(`${file} is a journal`);
         processJournal(`${config.jnlpath}${file}`);
       } else {
@@ -42,13 +45,16 @@ function processJournal(file) {
         // console.log(entry.Name);
         break;
       case 'StoredModules':
-        console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
+        dao.insertStg([cmdr, new Date(entry.timestamp), entry.event, line]);
+        // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'StoredShips':
-        console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
+        dao.insertStg([cmdr, new Date(entry.timestamp), entry.event, line]);
+        // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'Loadout':
-        console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event} - ${entry.ShipID} - ${entry.Ship} - ${entry.ShipName}`);
+        dao.insertStg([cmdr, new Date(entry.timestamp), entry.event, line]);
+        // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event} - ${entry.ShipID} - ${entry.Ship} - ${entry.ShipName}`);
         break;
       default:
         break;
