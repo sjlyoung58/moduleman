@@ -1,5 +1,7 @@
 const config = {};
 
+config.jnlpath = './testjournals/';
+
 config.db = {};
 config.eddn = {};
 
