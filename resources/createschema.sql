@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS stg_loadout (
     cmdr TEXT,
     jnltime REAL, 
     ship_id INTEGER,
-    jsondata TEXT);
+    jsondata TEXT,
+    coriolis TEXT);
 
 CREATE TABLE IF NOT EXISTS stg_st_ships (
     cmdr TEXT,

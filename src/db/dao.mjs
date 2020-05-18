@@ -31,8 +31,8 @@ class AppDAO {
 
   insertLoadout(params) {
     const insStg = `INSERT INTO stg_loadout
-    (cmdr, jnltime, ship_id, jsondata)
-    VALUES(?, julianday(?), ?, ?)
+    (cmdr, jnltime, ship_id, jsondata, coriolis)
+    VALUES(?, julianday(?), ?, ?, ?)
     `;
 
     this.run(insStg, params);
