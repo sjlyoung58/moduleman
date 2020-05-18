@@ -23,9 +23,9 @@ fs.readdir(config.jnlpath, (err, files) => {
     files.forEach((file) => {
       const nameParts = file.split('.');
       // if (nameParts[0] === 'Journal') {
-      if (nameParts[0] === 'Journal' && nameParts[1] > '199999999999') { // only journals from 2018 onwards
+      if (nameParts[0] === 'Journal' && nameParts[1] > '180227119999') { // only process 27 Feb 2018 onwards 3.0 ED: Beyond – Chapter One
       // if (nameParts[0] === 'Journal' && nameParts[1] > '200508000000') {
-        console.log(`${file} is a journal`);
+        // console.log(`${file} is a journal`);
         processJournal(`${config.jnlpath}${file}`);
       } else {
         // console.log(`${file} rejected`);
@@ -45,16 +45,15 @@ function processJournal(file) {
         // console.log(entry.Name);
         break;
       case 'StoredModules':
-        dao.insertStg([cmdr, new Date(entry.timestamp), entry.event, line]);
+        dao.insertStMods([cmdr, entry.timestamp, line]);
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'StoredShips':
-        dao.insertStg([cmdr, new Date(entry.timestamp), entry.event, line]);
+        dao.insertStShips([cmdr, entry.timestamp, line]);
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'Loadout':
-        dao.insertStg([cmdr, new Date(entry.timestamp), entry.event, line]);
-        // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event} - ${entry.ShipID} - ${entry.Ship} - ${entry.ShipName}`);
+        dao.insertLoadout([cmdr, entry.timestamp, entry.ShipID, line]);
         break;
       default:
         break;

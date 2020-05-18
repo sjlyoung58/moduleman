@@ -14,39 +14,54 @@ class AppDAO {
   }
 
   initialise() {
-    const stg = `
-        CREATE TABLE IF NOT EXISTS stg_jnl (
-          cmdr TEXT,
-          jnltime TIMESTAMP,
-          event TEXT,
-          jsondata TEXT
-          )`;
-    const clearStg = `
-         DELETE FROM stg_jnl`;
-    this.run(stg);
-    this.run(clearStg);
+    this.run('DELETE FROM stg_jnl');
+    this.run('DELETE FROM stg_loadout');
+    this.run('DELETE FROM stg_st_mods');
+    this.run('DELETE FROM stg_st_ships');
+  }
+
+  insertStShips(params) {
+    const insStg = `INSERT INTO stg_st_ships
+    (cmdr, jnltime, jsondata)
+    VALUES(?, julianday(?), ?)
+    `;
+
+    this.run(insStg, params);
+  }
+
+  insertLoadout(params) {
+    const insStg = `INSERT INTO stg_loadout
+    (cmdr, jnltime, ship_id, jsondata)
+    VALUES(?, julianday(?), ?, ?)
+    `;
+
+    this.run(insStg, params);
+  }
+
+  insertStMods(params) {
+    const insStg = `INSERT INTO stg_st_mods
+    (cmdr, jnltime, jsondata)
+    VALUES(?, julianday(?), ?)
+    `;
+
+    this.run(insStg, params);
   }
 
   insertStg(params) {
     const insStg = `INSERT INTO stg_jnl
     (cmdr, jnltime, event, jsondata)
-    VALUES(?, ?, ?, ?)
+    VALUES(?, julianday(?), ?, ?)
     `;
+
     this.run(insStg, params);
   }
 
-
   run(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function dbrun(err) {
-        if (err) {
-          console.log(`Error running sql ${sql}`);
-          console.log(err);
-          reject(err);
-        } else {
-          resolve({ id: this.lastID });
-        }
-      });
+    this.db.run(sql, params, (err) => {
+      if (err) {
+        console.log(`Error running sql ${sql}`);
+        console.log(err);
+      }
     });
   }
 }
