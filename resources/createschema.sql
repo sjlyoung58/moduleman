@@ -30,7 +30,8 @@ select cmdr,ship_id, max(jnltime) as jnltime
 select jnl.cmdr,
        date(jnl.jnltime) || ' ' || time(jnl.jnltime) as jnltime, 
        jnl.ship_id,
-       jnl.jsondata 
+       jnl.jsondata,
+       jnl.coriolis 
   from latest lat 
   inner join stg_loadout jnl on jnl.cmdr = lat.cmdr and jnl.ship_id = lat.ship_id and jnl.jnltime = lat.jnltime
  order by jnl.cmdr, jnl.ship_id;
