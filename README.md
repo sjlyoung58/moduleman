@@ -40,6 +40,12 @@ Extract the contents of the zip to a location of your choice on your PC
 ### First time only (or whenever a new version is downloaded)
 Start a command prompt in the root of the extracted project and type the following -
 
+`npm install`
+
+This will pull down all of the node js packages required by this project
+
+Next run this -
+
 `.\scripts\preparedb.bat`
 
 This should initialise a Sqlite database in the `./db/` folder
