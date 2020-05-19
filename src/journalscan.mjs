@@ -13,27 +13,34 @@ import AppDAO from './db/dao.mjs';
 
 const dao = new AppDAO(config.db.path);
 
-console.log(dao.toString());
+dao.initialise();
 
-fs.readdir(config.jnl.path, (err, files) => {
-  if (err) {
-    console.log('Error getting directory information.');
-  } else {
-    files.forEach((file) => {
-      const nameParts = file.split('.');
-      // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
-      // only process Journal, not JournalBeta
-      if (nameParts[0] === 'Journal' && nameParts[1] > '180227119999') {
-        processJournal(`${config.jnl.path}${file}`);
-      } else {
-        // console.log(`${file} rejected`);
-      }
-    });
-  }
-});
+processJournals();
+
+
+function processJournals() {
+  fs.readdir(config.jnl.path, (err, files) => {
+    if (err) {
+      console.log('Error getting directory information.');
+    }
+    else {
+      files.forEach((file) => {
+        const nameParts = file.split('.');
+        // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
+        // only process Journal, not JournalBeta
+        if (nameParts[0] === 'Journal' && nameParts[1] > '180227119999') {
+          processJournal(`${config.jnl.path}${file}`);
+        }
+        else {
+          // console.log(`${file} rejected`);
+        }
+      });
+    }
+  });
+}
 
 function processJournal(file) {
-  console.log(`processing ${file}`);
+  // console.log(`processing ${file}`);
   let cmdr = 'none';
   lineReader.eachLine(file, (line) => {
     const entry = JSON.parse(line);
@@ -49,11 +56,11 @@ function processJournal(file) {
         // console.log(entry.Name);
         break;
       case 'StoredModules':
-        dao.insertStMods([cmdr, ts, line]);
+        dao.upsertStMods([cmdr, ts, line]);
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'StoredShips':
-        dao.insertStShips([cmdr, ts, line]);
+        dao.upsertStShips([cmdr, ts, line]);
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'Loadout':
@@ -61,7 +68,7 @@ function processJournal(file) {
         buf = Buffer.from(ship, 'utf-8');
         zship = URLSafeBase64.encode(zlib.gzipSync(buf));
         coriolis = `https://coriolis.io/import?data=${zship}`;
-        dao.insertLoadout([cmdr, ts, entry.ShipID, ship, coriolis]);
+        dao.upsertLoadout([cmdr, entry.ShipID, ts, ship, coriolis]);
         break;
       default:
         break;

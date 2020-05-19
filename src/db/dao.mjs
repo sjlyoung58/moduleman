@@ -8,7 +8,7 @@ class AppDAO {
         console.log('Could not connect to database', err);
       } else {
         console.log('Connected to database');
-        this.initialise();
+        // this.initialise();
       }
     });
   }
@@ -20,28 +20,37 @@ class AppDAO {
     this.run('DELETE FROM stg_st_ships');
   }
 
-  insertStShips(params) {
+  upsertStShips(params) {
     const insStg = `INSERT INTO stg_st_ships
     (cmdr, jnltime, jsondata)
     VALUES(?, julianday(?), ?)
-    `;
+    ON CONFLICT(cmdr) DO UPDATE
+      SET jnltime = excluded.jnltime, jsondata = excluded.jsondata
+    WHERE excluded.jnltime > stg_st_ships.jnltime 
+`;
 
     this.run(insStg, params);
   }
 
-  insertLoadout(params) {
+  upsertLoadout(params) {
     const insStg = `INSERT INTO stg_loadout
-    (cmdr, jnltime, ship_id, jsondata, coriolis)
-    VALUES(?, julianday(?), ?, ?, ?)
+    (cmdr, ship_id, jnltime, jsondata, coriolis)
+    VALUES(?, ?, julianday(?), ?, ?)
+      ON CONFLICT(cmdr, ship_id) DO UPDATE
+        SET jnltime = excluded.jnltime, jsondata = excluded.jsondata, coriolis = excluded.coriolis
+      WHERE excluded.jnltime > stg_loadout.jnltime 
     `;
 
     this.run(insStg, params);
   }
 
-  insertStMods(params) {
+  upsertStMods(params) {
     const insStg = `INSERT INTO stg_st_mods
     (cmdr, jnltime, jsondata)
     VALUES(?, julianday(?), ?)
+    ON CONFLICT(cmdr) DO UPDATE
+      SET jnltime = excluded.jnltime, jsondata = excluded.jsondata
+    WHERE excluded.jnltime > stg_st_mods.jnltime 
     `;
 
     this.run(insStg, params);
