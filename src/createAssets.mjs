@@ -13,8 +13,10 @@ writeLinks();
 function writeLinks() {
   const logStream = fs.createWriteStream('./public/links.html', { flags: 'w' });
   logStream.write('<!DOCTYPE html><html lang="en">\n');
-  logStream.write('\n');
-  logStream.write('<body><div><table style="width:100%">\n');
+  logStream.write('<head>\n');
+  logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n');
+  logStream.write('</head>\n');
+  logStream.write('<body><div><table class="table table-striped">\n');
   logStream.write('<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
   dao.db.all(`select cmdr, shiptype, shipname, jnltime, days_old, coriolis 
                from v_loadout`, [], (dberr, rows) => {
