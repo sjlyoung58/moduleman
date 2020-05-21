@@ -84,6 +84,9 @@ SELECT * FROM v_stored_ships;
 
 select * from v_loadout;
 
+drop view v_ship_list;
+
+create view v_ship_list as
 with ships as (
 SELECT --st.cmdr, st.shipname, 
        coalesce(ld.cmdr, st.cmdr) as cmdr, 
@@ -107,6 +110,9 @@ select *
   from ships
  order by cmdr, ship_id;
 
+SELECT * FROM v_ship_list;
+
+
 SELECT ld.*
   FROM v_loadout ld
   left outer join v_stored_ships st
@@ -116,7 +122,16 @@ SELECT st.cmdr, ld.*
   FROM v_loadout ld
   left outer join v_stored_ships st
     on st.cmdr = ld.cmdr and st.ship_id = ld.ship_id ;
-   
+
+ --=== last shipyard visited ===--
+ 
+SELECT cmdr,
+       json_extract(jsondata,'$.StarSystem') as star,
+       json_extract(jsondata,'$.StationName') as station,
+       date(jnltime) || ' ' || time(jnltime) as jnltime,
+              round(julianday('now') - jnltime) as days_old
+       ,jsondata FROM stg_st_ships;
+
    
 --======================--
 -- expanding modules to rows

@@ -9,6 +9,7 @@
   "author": "Zoy",
   "license": "ISC",
   "dependencies": {
+    "escape-path-with-spaces": "^1.0.0",
     "fs": "0.0.1-security",
     "line-reader": "^0.4.0",
     "node-datetime": "^2.1.2",

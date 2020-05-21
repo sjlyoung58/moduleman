@@ -19,19 +19,18 @@ processJournals();
 
 
 function processJournals() {
+  console.log(`Reading journals from ${config.jnl.path}`);
   fs.readdir(config.jnl.path, (err, files) => {
     if (err) {
       console.log('Error getting directory information.');
-    }
-    else {
+    } else {
       files.forEach((file) => {
         const nameParts = file.split('.');
         // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
         // only process Journal, not JournalBeta
         if (nameParts[0] === 'Journal' && nameParts[1] > '180227119999') {
           processJournal(`${config.jnl.path}${file}`);
-        }
-        else {
+        } else {
           // console.log(`${file} rejected`);
         }
       });
