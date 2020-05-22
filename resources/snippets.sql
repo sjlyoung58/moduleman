@@ -171,10 +171,10 @@ split as (
 select cmdr,
        Name_Localised,
        case json_extract(name_jsa,'$.nameParts[0]')
-       when 'int' then 'Internal'
-       when 'hpt' then 
-            case when json_extract(name_jsa,'$.nameParts[2]') = 'size0' then 'Utility' else 'Hardpoint' end
-       else 'Armour'
+         when 'int' then 'Internal'
+         when 'hpt' then 
+              case when json_extract(name_jsa,'$.nameParts[2]') = 'size0' then 'Utility' else 'Hardpoint' end
+         else 'Hull'
        end as slot_type,
        json_extract(name_jsa,'$.nameParts[0]') as np1,
        json_extract(name_jsa,'$.nameParts[1]') as np2,
@@ -185,15 +185,53 @@ select cmdr,
        EngineerModifications,
        "Level",Quality,StorageSlot,StarSystem,MarketID,TransferCost,TransferTime,BuyPrice,Hot
   from csv
-)
-select cmdr,Name_Localised,
+),
+nme as (
+select cmdr,
        slot_type,
+       np2 as item_group,
+       Name_Localised as Item,
+       case slot_type
+         when 'Internal' then case when np2 in('dronecontrol') then np4 else np3 end
+         when 'Hardpoint' then case when np2 in('mining') then np5 else np4 end
+         when 'Utility' then np3
+         else np3
+       end as "size",
+       case slot_type
+         when 'Internal' then case when np2 in('dronecontrol') then np5 else np4 end
+         when 'Hardpoint' then case when np2 in('mining') then np4 else np3 end
+         when 'Utility' then np4
+         else np1
+       end as "type",
        np1,np2,np3,np4,np5,
 --       name_jsa,
        EngineerModifications,"Level",Quality,StorageSlot,
        StarSystem,
        MarketID,TransferCost,TransferTime,BuyPrice,Hot
   from split
- order by cmdr, slot_type, BuyPrice
+)
+select cmdr,
+       StarSystem,
+       slot_type,
+       item_group,
+       Item,
+       case "size"
+         when 'small' then '1 Small'
+         when 'medium' then '2 Medium'
+         when 'large' then '3 Large'
+         when 'Huge' then '4 Huge'
+         else "size"
+       end as "size",
+       "type",
+       --np1,np2,np3,np4,np5,
+       EngineerModifications,
+       "Level",
+       Quality,
+       --StorageSlot,
+       --MarketID,TransferCost,TransferTime,
+       BuyPrice,
+       Hot 
+  from nme
+ order by cmdr, slot_type, item_group, size, BuyPrice
 ;
 
