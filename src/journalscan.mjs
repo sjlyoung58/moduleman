@@ -42,7 +42,7 @@ function processJournal(file) {
   // console.log(`processing ${file}`);
   let cmdr = 'none';
   lineReader.eachLine(file, (line) => {
-    const entry = parseJSON(line,file);
+    const entry = parseJSON(line, file);
     const ts = entry.timestamp;
     delete entry.timestamp;
     let ship;
@@ -76,13 +76,13 @@ function processJournal(file) {
 }
 
 // function to ignore corrupt lines in journals
-function parseJSON (json, file) {
-    var parsed = JSON.parse(`{ "timestamp":"${new Date().toISOString}", "event":"ParseError" }`);  
-    try {
-      parsed = JSON.parse(json)
-    } catch (e) {
-      console.log(`Bad JSON found in file ${file} - line ignored:${json}`);
-    } 
-    return parsed // will be ParseError if problem input
+function parseJSON(json, jnlfile) {
+  let parsed = JSON.parse(`{ "timestamp":"${new Date().toISOString}",
+                             "event":"ParseError", "file":"${jnlfile}" }`);
+  try {
+    parsed = JSON.parse(json);
+  } catch (e) {
+    console.log(`Bad JSON found in file ${jnlfile} - line ignored:${json}`);
   }
-  
+  return parsed; // will be ParseError if problem input
+}
