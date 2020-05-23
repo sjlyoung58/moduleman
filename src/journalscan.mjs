@@ -20,6 +20,7 @@ processJournals();
 
 function processJournals() {
   console.log(`Reading journals from ${config.jnl.path}`);
+  console.log('l = loadout found/processed, m = modules, s = shipyard');
   fs.readdir(config.jnl.path, (err, files) => {
     if (err) {
       console.log('Error getting directory information.');
@@ -39,7 +40,6 @@ function processJournals() {
 }
 
 function processJournal(file) {
-  // console.log(`processing ${file}`);
   let cmdr = 'none';
   lineReader.eachLine(file, (line) => {
     const entry = parseJSON(line, file);
@@ -78,7 +78,7 @@ function processJournal(file) {
 // function to ignore corrupt lines in journals
 function parseJSON(json, jnlfile) {
   let parsed = JSON.parse(`{ "timestamp":"${new Date().toISOString}",
-                             "event":"ParseError", "file":"${jnlfile}" }`);
+                             "event":"ParseError", "file":"${jnlfile.replace(/\\/g, '/')}" }`);
   try {
     parsed = JSON.parse(json);
   } catch (e) {

@@ -30,6 +30,7 @@ class AppDAO {
 `;
 
     this.run(insStg, params);
+    process.stdout.write('s');
   }
 
   upsertLoadout(params) {
@@ -42,6 +43,7 @@ class AppDAO {
     `;
 
     this.run(insStg, params);
+    process.stdout.write('l');
   }
 
   upsertStMods(params) {
@@ -54,6 +56,7 @@ class AppDAO {
     `;
 
     this.run(insStg, params);
+    process.stdout.write('m');
   }
 
   insertStg(params) {

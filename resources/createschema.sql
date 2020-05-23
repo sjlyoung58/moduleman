@@ -86,3 +86,96 @@ select *
   from ships
  order by cmdr, ship_id;
 
+create view v_stored_modules as 
+with raw as (
+select md.cmdr, 
+--       md.jnltime,
+       json_extract(tr.value,'$.Name_Localised') as Name_Localised,
+       json_extract(tr.value,'$.Name') as Name,
+       json_extract(tr.value,'$.EngineerModifications') as EngineerModifications,
+       json_extract(tr.value,'$.Level') as Level,
+       json_extract(tr.value,'$.Quality') as Quality,
+       json_extract(tr.value,'$.StorageSlot') as StorageSlot,
+       json_extract(tr.value,'$.StarSystem') as StarSystem,
+       json_extract(tr.value,'$.MarketID') as MarketID,
+       json_extract(tr.value,'$.TransferCost') as TransferCost,
+       json_extract(tr.value,'$.TransferTime') as TransferTime,
+       json_extract(tr.value,'$.BuyPrice') as BuyPrice,
+       json_extract(tr.value,'$.Hot') as Hot
+  from stg_st_mods md, json_each(md.jsondata,'$.Items') tr 
+),
+csv as (
+select cmdr,
+       Name_Localised,
+       '{"nameParts":["' || replace(replace(replace(Name,'_','","'),',"name;',''),'$','') || ']}' as name_jsa,
+       EngineerModifications,
+       "Level",Quality,StorageSlot,StarSystem,MarketID,TransferCost,TransferTime,BuyPrice,Hot
+ from raw
+),
+split as (
+select cmdr,
+       Name_Localised,
+       case json_extract(name_jsa,'$.nameParts[0]')
+         when 'int' then 'Internal'
+         when 'hpt' then 
+              case when json_extract(name_jsa,'$.nameParts[2]') = 'size0' then 'Utility' else 'Hardpoint' end
+         else 'Hull'
+       end as slot_type,
+       json_extract(name_jsa,'$.nameParts[0]') as np1,
+       json_extract(name_jsa,'$.nameParts[1]') as np2,
+       json_extract(name_jsa,'$.nameParts[2]') as np3,
+       json_extract(name_jsa,'$.nameParts[3]') as np4,
+       json_extract(name_jsa,'$.nameParts[4]') as np5,
+       name_jsa,
+       EngineerModifications,
+       "Level",Quality,StorageSlot,StarSystem,MarketID,TransferCost,TransferTime,BuyPrice,Hot
+  from csv
+),
+nme as (
+select cmdr,
+       slot_type,
+       np2 as item_group,
+       Name_Localised as Item,
+       case slot_type
+         when 'Internal' then case when np2 in('dronecontrol') then np4 else np3 end
+         when 'Hardpoint' then case when np2 in('mining') then np5 else np4 end
+         when 'Utility' then np3
+         else np3
+       end as "size",
+       case slot_type
+         when 'Internal' then case when np2 in('dronecontrol') then np5 else np4 end
+         when 'Hardpoint' then case when np2 in('mining') then np4 else np3 end
+         when 'Utility' then np4
+         else np1
+       end as "type",
+       np1,np2,np3,np4,np5,
+--       name_jsa,
+       EngineerModifications,"Level",Quality,StorageSlot,
+       StarSystem,
+       MarketID,TransferCost,TransferTime,BuyPrice,Hot
+  from split
+)
+select cmdr,
+       StarSystem,
+       slot_type,
+       item_group,
+       Item,
+       case "size"
+         when 'small' then '1 Small'
+         when 'medium' then '2 Medium'
+         when 'large' then '3 Large'
+         when 'Huge' then '4 Huge'
+         else "size"
+       end as "size",
+       "type",
+       --np1,np2,np3,np4,np5,
+       EngineerModifications as blueprint,
+       "Level",
+       Quality,
+       --StorageSlot,
+       --MarketID,TransferCost,TransferTime,
+       BuyPrice,
+       Hot 
+  from nme
+ order by cmdr, slot_type, item_group, size, BuyPrice;
+

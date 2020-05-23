@@ -4,6 +4,7 @@ testjournals/*.cache
 */.DS_Store
 db/*.sqlite3
 public/links.html
+public/stmods.html
 
 # Logs
 logs

@@ -142,6 +142,29 @@ select *
   from stg_st_mods md, json_tree(md.jsondata,'$.Items') tr 
  where parent = 253;
 
+select md.cmdr, 
+--       md.jnltime,
+       tr.value,
+       json_extract(tr.value,'$.Name_Localised') as Name_Localised,
+       json_extract(tr.value,'$.Name') as Name,
+       json_extract(tr.value,'$.EngineerModifications') as EngineerModifications,
+       json_extract(tr.value,'$.Level') as Level,
+       json_extract(tr.value,'$.Quality') as Quality,
+       json_extract(tr.value,'$.StorageSlot') as StorageSlot,
+       json_extract(tr.value,'$.StarSystem') as StarSystem,
+       json_extract(tr.value,'$.MarketID') as MarketID,
+       json_extract(tr.value,'$.TransferCost') as TransferCost,
+       json_extract(tr.value,'$.TransferTime') as TransferTime,
+       json_extract(tr.value,'$.BuyPrice') as BuyPrice,
+       json_extract(tr.value,'$.Hot') as Hot
+  from stg_st_mods md, json_each(md.jsondata,'$.Items') tr 
+ where json_extract(tr.value,'$.EngineerModifications') is not null
+ order by json_extract(tr.value,'$.Name_Localised'), json_extract(tr.value,'$.BuyPrice') desc
+;
+
+drop view v_stored_modules;
+
+create view v_stored_modules as 
 with raw as (
 select md.cmdr, 
 --       md.jnltime,
@@ -224,7 +247,7 @@ select cmdr,
        end as "size",
        "type",
        --np1,np2,np3,np4,np5,
-       EngineerModifications,
+       EngineerModifications as blueprint,
        "Level",
        Quality,
        --StorageSlot,
@@ -235,3 +258,4 @@ select cmdr,
  order by cmdr, slot_type, item_group, size, BuyPrice
 ;
 
+select * from v_stored_modules;
