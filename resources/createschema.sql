@@ -167,7 +167,7 @@ select cmdr,
          when 'Huge' then '4 Huge'
          else "size"
        end as "size",
-       "type",
+       ifnull("type",'') as "type",
        --np1,np2,np3,np4,np5,
        ifnull(EngineerModifications,'') as blueprint,
        ifnull("Level",'') as "Level",

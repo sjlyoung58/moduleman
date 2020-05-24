@@ -87,14 +87,18 @@ function writeStoredModules() {
                 + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n');
   logStream.write('</head><body><div translate="no" class="notranslate">\n');
 
-  logStream.write('<h4 class="p-1">CMDR Stored Module Stats</h4><p class="p-2">\n');
+  logStream.write('<h4 class="p-1">CMDR Stored Module Stats</h4><p>\n');
+
+  let cmdr = 'none';
 
   dao.db.all(cmdrSql, [], (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
     rows.forEach((row) => {
-      logStream.write(`CMDR ${row.cmdr} has ${row.modules} modules stored in ${row.location}<br>\n`);
+      const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
+      logStream.write(`${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has ${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location}<br>\n`);
+      cmdr = row.cmdr;
     });
     logStream.write('</p><h4 class="p-1">List of Stored Modules</h4>\n');
     logStream.write('<table class="table table-striped">\n');
