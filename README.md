@@ -54,13 +54,15 @@ Next run this from the root of the project (i.e. do not `cd scripts` first) -
 This should initialise a Sqlite database in the `./db/` folder
 
 ### Every time you wish to analyse your journals for new content
-By default, the code will look for journals in the standard default location for Elite. If this is not where you have your journals, edit .\src\config\config.mjs to set the correct location for your journals
+By default, the code will look for journals in the standard location for Elite. If this is not where you have your journals, edit `.\src\config\config.mjs` to set the correct location for your journals
 
 Start a command prompt in the root of the extracted project (i.e. do not `cd scripts` first) and type the following -
 
 `.\scripts\run.bat`
 
-This will create a web page of all your ships. Use File... Open... to open
-`.\public\links.html` in your browser
+This will analyse your journals and create web pages of all your ships, modules etc. You can use File... Open... to open
+`.\public\index.html` in your browser (or any of the other pages created  in `.\public\`)
+
+`.\scripts\run.bat` will also open `.\public\index.html` in your default browser automatically
 
 You can refresh your output file every time your journals change by rerunning `.\scripts\run.bat`
