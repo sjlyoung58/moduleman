@@ -5,6 +5,7 @@ testjournals/*.cache
 db/*.sqlite3
 public/links.html
 public/stmods.html
+src/config/config.mjs
 
 # Logs
 logs
