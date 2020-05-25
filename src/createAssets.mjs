@@ -71,11 +71,7 @@ function writeLinks() {
 function writeStoredModules() {
   const logStream = fs.createWriteStream('./public/stmods.html', { flags: 'w' });
 
-  const cmdrSql = `with mods as (
-    select cmdr, StarSystem as location, count(*) as modules from v_stored_modules group by  cmdr, StarSystem union
-    select cmdr, '~Total (all stored modules)' as location, count(*) as modules from v_stored_modules group by  cmdr
-    )
-    select cmdr, replace(location,'~','') as location, modules from mods;`;
+  const cmdrSql = 'select * from v_cmdr_module_summary';
 
   const moduleSql = `select cmdr,StarSystem,slot_type,item_group,Item,
                             "size","type",blueprint,"Level",Quality,BuyPrice,Hot
@@ -97,7 +93,7 @@ function writeStoredModules() {
     }
     rows.forEach((row) => {
       const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
-      logStream.write(`${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has ${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location}<br>\n`);
+      logStream.write(`${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has ${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
       cmdr = row.cmdr;
     });
     logStream.write('</p><h4 class="p-1">List of Stored Modules</h4>\n');
