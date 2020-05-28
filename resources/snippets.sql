@@ -180,9 +180,6 @@ select * from engineer;
 --======================--
 
 -- expanding modules to rows
-select tr.*, ld.* 
-  FROM stg_loadout ld, json_tree(ld.jsondata,'$.Modules') tr;
-
 select *
   from stg_st_mods md, json_tree(md.jsondata,'$.Items') tr 
  where parent = 253;
@@ -327,4 +324,86 @@ union
      order by m.cmdr, m.location;
 
 select * from v_cmdr_module_summary;
+
+--==================== loadout modules ======================--
+
+select t1.*, ld.* 
+  FROM stg_loadout ld, 
+       json_tree(ld.jsondata,'$.Modules') t1;
+
+select * from stg_loadout sl where json_extract(jsondata,'$.ShipID')=2;
+
+select json_extract(jsondata,'$.ShipID') as ship_id,
+       json_extract(jsondata,'$.ShipName') as ship_name,
+       json_extract(jsondata,'$.Modules') as modules,
+  from stg_loadout sl where json_extract(jsondata,'$.ShipID')=2;
+
+select t1.*, ld.* 
+  FROM stg_loadout ld, 
+       json_each(ld.jsondata,'$.Modules') t1
+       --json_each(t1.value,'$.Engineering.Modifiers') t2
+ where json_extract(ld.jsondata,'$.ShipID')=2;
+
+drop view v_slots_of_interest;
+
+create view v_slots_of_interest as
+with slots as (
+select json_extract(t1.value,'$.Slot') as slot
+  FROM stg_loadout ld, 
+       json_each(ld.jsondata,'$.Modules') t1
+)
+select distinct cast(slot as TEXT) as slot
+  from slots
+ where slot not like 'Bobble%'
+   and slot not like 'Independent%'
+   and slot not like 'Decal%'
+   and slot not like 'ShipName%'
+   and slot not like 'ShipID%'
+   and slot not like '%Colour'
+   and slot not in('CargoHatch','ShipCockpit','PlanetaryApproachSuite','VesselVoice','PaintJob','FuelTank')
+ order by slot;
+
+select * from v_slots_of_interest;
+
+with slots as (
+select json_extract(ld.jsondata,'$.ShipID') as ship_id,
+       json_extract(ld.jsondata,'$.ShipName') as ship_name, 
+       json_extract(t1.value,'$.Slot') as slot, 
+       json_extract(t1.value,'$.Item') as item, 
+       json_extract(t1.value,'$.Engineering.Engineer') as engineer, 
+       json_extract(t1.value,'$.Engineering.BlueprintName') as blueprint, 
+       json_extract(t1.value,'$.Engineering.ExperimentalEffect_Localised') as exp_effect, 
+       json_extract(t1.value,'$.Engineering.Level') as "level", 
+       json_extract(t1.value,'$.Engineering.Quality') as quality, 
+       json_extract(t1.value,'$.Engineering.Modifiers') as mods, 
+       t1.value as j_slot
+  FROM stg_loadout ld, 
+       json_each(ld.jsondata,'$.Modules') t1
+       --json_each(t1.value,'$.Engineering.Modifiers') t2
+ where json_extract(ld.jsondata,'$.ShipID') IN(2)
+)
+select s.ship_id,
+       s.ship_name,
+       s.slot,
+       s.item,
+       s.engineer,
+       s.blueprint,
+       s.exp_effect,
+       s."level",
+       s.quality,
+       json_extract(s.mods,'$[0].Label') as i0, json_extract(s.mods,'$[0].Value') as v0, json_extract(s.mods,'$[0].OriginalValue') as o0, json_extract(s.mods,'$[0].LessIsGood') as l0,
+       json_extract(s.mods,'$[1].Label') as i1, json_extract(s.mods,'$[1].Value') as v1, json_extract(s.mods,'$[1].OriginalValue') as o1, json_extract(s.mods,'$[1].LessIsGood') as l1,
+       json_extract(s.mods,'$[2].Label') as i2, json_extract(s.mods,'$[2].Value') as v2, json_extract(s.mods,'$[2].OriginalValue') as o2, json_extract(s.mods,'$[2].LessIsGood') as l2,
+       json_extract(s.mods,'$[3].Label') as i3, json_extract(s.mods,'$[3].Value') as v3, json_extract(s.mods,'$[3].OriginalValue') as o3, json_extract(s.mods,'$[3].LessIsGood') as l3,
+       json_extract(s.mods,'$[4].Label') as i4, json_extract(s.mods,'$[4].Value') as v4, json_extract(s.mods,'$[4].OriginalValue') as o4, json_extract(s.mods,'$[4].LessIsGood') as l4,
+       json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, json_extract(s.mods,'$[5].OriginalValue') as o5, json_extract(s.mods,'$[5].LessIsGood') as l5,
+       json_extract(s.mods,'$[6].Label') as i6, json_extract(s.mods,'$[6].Value') as v6, json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
+       json_extract(s.mods,'$[7].Label') as i7, json_extract(s.mods,'$[7].Value') as v7, json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
+       s.mods
+--       ,m.value
+  from slots s
+ inner join v_slots_of_interest v on v.slot = s.slot 
+--  join json_each(j_slot,'$.Engineering.Modifiers') m
+;
+
 
