@@ -380,7 +380,7 @@ select json_extract(ld.jsondata,'$.ShipID') as ship_id,
   FROM stg_loadout ld, 
        json_each(ld.jsondata,'$.Modules') t1
        --json_each(t1.value,'$.Engineering.Modifiers') t2
- where json_extract(ld.jsondata,'$.ShipID') IN(2)
+-- where json_extract(ld.jsondata,'$.ShipID') IN(2)
 )
 select s.ship_id,
        s.ship_name,
@@ -399,11 +399,13 @@ select s.ship_id,
        json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, json_extract(s.mods,'$[5].OriginalValue') as o5, json_extract(s.mods,'$[5].LessIsGood') as l5,
        json_extract(s.mods,'$[6].Label') as i6, json_extract(s.mods,'$[6].Value') as v6, json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
        json_extract(s.mods,'$[7].Label') as i7, json_extract(s.mods,'$[7].Value') as v7, json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
-       s.mods
+       s.mods, json_array_length(s.mods) as modification_count
 --       ,m.value
   from slots s
  inner join v_slots_of_interest v on v.slot = s.slot 
 --  join json_each(j_slot,'$.Engineering.Modifiers') m
+ where i6 is not null and v6 is null
+ order by json_array_length(s.mods) desc
 ;
 
 
