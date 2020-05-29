@@ -93,7 +93,8 @@ function writeStoredModules() {
     }
     rows.forEach((row) => {
       const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
-      logStream.write(`${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has ${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
+      logStream.write(`${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
+                    + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
       cmdr = row.cmdr;
     });
     logStream.write('</p><h4 class="p-1">List of Stored Modules</h4>\n');
@@ -117,7 +118,7 @@ function writeStoredModules() {
               + `<td>${row.type}</td>`
               + `<td>${row.blueprint}</td>`
               + `<td>${row.Level}</td>`
-              + `<td>${row.Quality}</td>`
+              + `<td>${(row.Quality === 0) ? 'Legacy' : row.Quality}</td>`
               + `<td>${row.BuyPrice}</td>`
               + `<td>${row.Hot}</td>`
               + '</tr>\n');
