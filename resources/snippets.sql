@@ -108,15 +108,45 @@ SELECT --st.cmdr, st.shipname,
 )
 select *
   from ships
- order by cmdr, ship_id;
+  UNION 
+SELECT ld.cmdr, 
+       ld.ship_id, ld.shiptype, 
+       ld.shipname, 
+       'current ship' as star, 
+       json_extract(jsondata,'$.HullValue') + json_extract(jsondata,'$.ModulesValue') as value,
+       0 as xfer_cost, 0 as xfer_time,
+       ld.jnltime, 
+       coalesce(ld.days_old,'<no recent data>') as days_old,
+       coalesce(ld.jsondata,'<no recent data>') as jsondata,  
+       coalesce(ld.coriolis,'./links.html') as coriolis
+  FROM v_loadout ld
+ inner join (SELECT cmdr, MAX(jnltime) as jnltime 
+  FROM v_loadout group by cmdr) mx
+ON ld.jnltime = mx.jnltime order by cmdr, ship_id;
 
 SELECT * FROM v_ship_list;
 
+SELECT * FROM v_stored_ships vss;
 
 SELECT ld.*
   FROM v_loadout ld
-  left outer join v_stored_ships st
-    on st.cmdr = ld.cmdr and st.ship_id = ld.ship_id ;
+where cmdr = 'Infomancer';
+
+--        cmdr, ship_id, shiptype, shipname, star, value, xfer_cost, xfer_time, jnltime, days_old, jsondata, coriolis
+SELECT ld.cmdr, 
+       ld.ship_id, ld.shiptype, 
+       ld.shipname, 
+       '<current Ship>' as star, 
+       json_extract(jsondata,'$.HullValue') + json_extract(jsondata,'$.ModulesValue') as value,
+       0 as xfer_cost, 0 as xfer_time,
+       ld.jnltime, 
+       coalesce(ld.days_old,'<no recent data>') as days_old,
+       coalesce(ld.jsondata,'<no recent data>') as jsondata,  
+       coalesce(ld.coriolis,'./links.html') as coriolis
+  FROM v_loadout ld
+ inner join (SELECT cmdr, MAX(jnltime) as jnltime 
+  FROM v_loadout group by cmdr) mx
+ON ld.jnltime = mx.jnltime;
 
 SELECT st.cmdr, ld.* 
   FROM v_loadout ld

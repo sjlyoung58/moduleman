@@ -98,7 +98,7 @@ SELECT shp.cmdr, json_extract(jsondata,'$.StarSystem') || '/' || json_extract(js
        0 as xfer_cost,       
        0 as xfer_time      
   FROM stg_st_ships shp, json_each(shp.jsondata,'$.ShipsHere');
- 
+
 create view v_ship_list as
 with ships as (
 SELECT --st.cmdr, st.shipname, 
@@ -121,7 +121,22 @@ SELECT --st.cmdr, st.shipname,
 )
 select *
   from ships
- order by cmdr, ship_id;
+  UNION 
+SELECT ld.cmdr, 
+       ld.ship_id, ld.shiptype, 
+       ld.shipname, 
+       'current ship' as star, 
+       json_extract(jsondata,'$.HullValue') + json_extract(jsondata,'$.ModulesValue') as value,
+       0 as xfer_cost, 0 as xfer_time,
+       ld.jnltime, 
+       coalesce(ld.days_old,'<no recent data>') as days_old,
+       coalesce(ld.jsondata,'<no recent data>') as jsondata,  
+       coalesce(ld.coriolis,'./links.html') as coriolis
+  FROM v_loadout ld
+ inner join (SELECT cmdr, MAX(jnltime) as jnltime 
+  FROM v_loadout group by cmdr) mx
+ON ld.jnltime = mx.jnltime order by cmdr, ship_id;
+
 
 create view v_stored_modules as 
 with raw as (
@@ -234,3 +249,20 @@ union
            ifnull(m.engineer,'') as engineer
       from mods m
      order by m.cmdr, m.location;
+
+create view v_slots_of_interest as
+with slots as (
+select json_extract(t1.value,'$.Slot') as slot
+  FROM stg_loadout ld, 
+       json_each(ld.jsondata,'$.Modules') t1
+)
+select distinct slot from slots
+ where slot not like 'Bobble%'
+   and slot not like 'Independent%'
+   and slot not like 'Decal%'
+   and slot not like 'ShipName%'
+   and slot not like 'ShipID%'
+   and slot not like '%Colour'
+   and slot not in('CargoHatch','ShipCockpit','PlanetaryApproachSuite','VesselVoice','PaintJob','FuelTank','Radar')
+ order by slot;
+
