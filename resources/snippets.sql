@@ -426,15 +426,18 @@ select s.ship_id,
        json_extract(s.mods,'$[2].Label') as i2, json_extract(s.mods,'$[2].Value') as v2, json_extract(s.mods,'$[2].OriginalValue') as o2, json_extract(s.mods,'$[2].LessIsGood') as l2,
        json_extract(s.mods,'$[3].Label') as i3, json_extract(s.mods,'$[3].Value') as v3, json_extract(s.mods,'$[3].OriginalValue') as o3, json_extract(s.mods,'$[3].LessIsGood') as l3,
        json_extract(s.mods,'$[4].Label') as i4, json_extract(s.mods,'$[4].Value') as v4, json_extract(s.mods,'$[4].OriginalValue') as o4, json_extract(s.mods,'$[4].LessIsGood') as l4,
-       json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, json_extract(s.mods,'$[5].OriginalValue') as o5, json_extract(s.mods,'$[5].LessIsGood') as l5,
-       json_extract(s.mods,'$[6].Label') as i6, json_extract(s.mods,'$[6].Value') as v6, json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
-       json_extract(s.mods,'$[7].Label') as i7, json_extract(s.mods,'$[7].Value') as v7, json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
+       json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, 
+          json_extract(s.mods,'$[5].OriginalValue') as o5, coalesce(json_extract(s.mods,'$[5].Value'),json_extract(s.mods,'$[5].ValueStr_Localised')) as l5,
+       json_extract(s.mods,'$[6].Label') as i6, coalesce(json_extract(s.mods,'$[6].Value'),json_extract(s.mods,'$[6].ValueStr_Localised')) as v6, 
+          json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
+       json_extract(s.mods,'$[7].Label') as i7, coalesce(json_extract(s.mods,'$[7].Value'),json_extract(s.mods,'$[7].ValueStr_Localised')) as v7, 
+          json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
        s.mods, json_array_length(s.mods) as modification_count
 --       ,m.value
   from slots s
  inner join v_slots_of_interest v on v.slot = s.slot 
 --  join json_each(j_slot,'$.Engineering.Modifiers') m
- where i6 is not null and v6 is null
+ where i5 is not null and l5 is null
  order by json_array_length(s.mods) desc
 ;
 

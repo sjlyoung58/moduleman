@@ -8,7 +8,7 @@ import zlib from 'zlib';
 import URLSafeBase64 from 'urlsafe-base64';
 
 import config from './config/config.mjs';
-
+import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
 
 const dao = new AppDAO(config.db.path);
@@ -19,6 +19,7 @@ processJournals();
 
 
 function processJournals() {
+  console.log(`Fleet Manager version ${release}`);
   console.log(`Reading journals from ${config.jnl.path}`);
   console.log('l = loadout found/processed, m = modules, s = shipyard');
   fs.readdir(config.jnl.path, (err, files) => {

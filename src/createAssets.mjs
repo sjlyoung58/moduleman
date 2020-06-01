@@ -3,6 +3,7 @@
 import fs from 'fs';
 
 import config from './config/config.mjs';
+import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
 
 const dao = new AppDAO(config.db.path);
@@ -63,7 +64,7 @@ function writeLinks() {
             + '</tr>\n');
     });
 
-    logStream.write('</table></div></body></html>\n');
+    logStream.write(`</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
     logStream.close();
   });
 }
@@ -124,7 +125,7 @@ function writeStoredModules() {
               + '</tr>\n');
     });
 
-    logStream.write('</table></div></body></html>\n');
+    logStream.write(`</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
     logStream.close();
   });
 }
