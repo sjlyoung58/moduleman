@@ -26,7 +26,8 @@ function writeLinks() {
   logStream.write('<!DOCTYPE html><html lang="en">\n');
   logStream.write('<head>\n');
   logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
-                + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n');
+                + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
+                + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
   logStream.write('</head><body><div translate="no" class="notranslate">\n');
 
   logStream.write('<h4 class="p-1">CMDR Status</h4><p class="p-2">Shipyard transfer information relates to the last shipyard visited -<br>\n');
@@ -81,7 +82,8 @@ function writeStoredModules() {
   logStream.write('<!DOCTYPE html><html lang="en">\n');
   logStream.write('<head>\n');
   logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
-                + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n');
+                + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
+                + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
   logStream.write('</head><body><div translate="no" class="notranslate">\n');
 
   logStream.write('<h4 class="p-1">CMDR Stored Module Stats</h4><p>\n');
