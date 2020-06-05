@@ -1,21 +1,32 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-console */
 import fs from 'fs';
+import * as util from 'util';
+import * as stream from 'stream';
+import {once} from 'events';
 
 import config from './config/config.mjs';
 import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
+// import writeIterableToFile from './writeFile.mjs';
 
 const dao = new AppDAO(config.db.path);
 
 console.log('Creating results');
 
-writeLinks();
+const foo = async () => {
+  await writeIterableToFile(
+    ['One', ' line of text.\n', 'Two\n'], '../public/test.txt');
+}
 
-writeStoredModules();
 
-function writeLinks() {
-  const logStream = fs.createWriteStream('./public/links.html', { flags: 'w' });
+
+// writeShipyard();
+
+// writeStoredModules();
+
+function writeShipyard() {
+  const logStream = fs.createWriteStream('./public/syard.html', { flags: 'w' });
 
   const cmdrSql = `  SELECT cmdr, json_extract(jsondata,'$.StarSystem') as star, json_extract(jsondata,'$.StationName') as station,
                             round(julianday('now') - jnltime) as days_old FROM stg_st_ships`;
@@ -23,14 +34,7 @@ function writeLinks() {
   const shipSql = `select cmdr, shiptype, shipname, star, value, xfer_cost, xfer_time, jnltime, days_old, coriolis 
                      from v_ship_list`;
 
-  logStream.write('<!DOCTYPE html><html lang="en">\n');
-  logStream.write('<head>\n');
-  logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
-                + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
-                + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
-  logStream.write('</head><body><div translate="no" class="notranslate">\n');
-
-  logStream.write('<h4 class="p-1">CMDR Status</h4><p class="p-2">Shipyard transfer information relates to the last shipyard visited -<br>\n');
+  writeHeader(logStream, 'CMDR Status');
 
   dao.db.all(cmdrSql, [], (dberr, rows) => {
     if (dberr) {
@@ -39,6 +43,7 @@ function writeLinks() {
     rows.forEach((row) => {
       logStream.write(`CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
+
     logStream.write('</p><h4 class="p-1">List of Ships</h4>\n');
     logStream.write('<table class="table table-striped">\n');
     logStream.write('<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
@@ -70,6 +75,8 @@ function writeLinks() {
   });
 }
 
+
+
 function writeStoredModules() {
   const logStream = fs.createWriteStream('./public/stmods.html', { flags: 'w' });
 
@@ -79,14 +86,7 @@ function writeStoredModules() {
                             "size","type",blueprint,"Level",Quality,BuyPrice,Hot
                        from v_stored_modules;`;
 
-  logStream.write('<!DOCTYPE html><html lang="en">\n');
-  logStream.write('<head>\n');
-  logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
-                + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
-                + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
-  logStream.write('</head><body><div translate="no" class="notranslate">\n');
-
-  logStream.write('<h4 class="p-1">CMDR Stored Module Stats</h4><p>\n');
+  writeHeader(logStream, 'CMDR Stored Module Stats');
 
   let cmdr = 'none';
 
@@ -130,4 +130,29 @@ function writeStoredModules() {
     logStream.write(`</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
     logStream.close();
   });
+}
+
+function writeHeader(logStream, mainTitle) {
+  logStream.write('<!DOCTYPE html><html lang="en">\n');
+  logStream.write('<head>\n');
+  logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
+    + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
+    + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
+  logStream.write('</head><body><div translate="no" class="notranslate">\n');
+  logStream.write(`<h4 class="p-1">${mainTitle}</h4><p>\n`);
+}
+
+const finished = util.promisify(stream.finished); // (A)
+
+async function writeIterableToFile(iterable, filePath) {
+  const writable = fs.createWriteStream(filePath, {encoding: 'utf8'});
+  for await (const chunk of iterable) {
+    if (!writable.write(chunk)) { // (B)
+      // Handle backpressure
+      await once(writable, 'drain');
+    }
+  }
+  writable.end(); // (C)
+  // Wait until done. Throws if there are errors.
+  await finished(writable);
 }

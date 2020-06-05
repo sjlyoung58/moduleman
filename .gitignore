@@ -2,8 +2,10 @@ testjournals/*.log
 testjournals/*.json
 testjournals/*.cache
 */.DS_Store
+.DS_Store
 db/*.sqlite3
 public/links.html
+public/syard.html
 public/stmods.html
 src/config/config.mjs
 
