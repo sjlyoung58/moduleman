@@ -1,27 +1,12 @@
-import * as util from 'util';
-import * as stream from 'stream';
-import * as fs from 'fs';
-import {once} from 'events';
+/* eslint-disable no-console */
 
-const finished = util.promisify(stream.finished); // (A)
+import { promises as fsp } from 'fs';
 
-async function writeIterableToFile(iterable, filePath) {
-  const writable = fs.createWriteStream(filePath, {encoding: 'utf8'});
-  for await (const chunk of iterable) {
-    if (!writable.write(chunk)) { // (B)
-      // Handle backpressure
-      await once(writable, 'drain');
-    }
+async function myWrite() {
+  try {
+    await fsp.writeFile('../public/test6.js', "console.log('Hello world with Node.js v13 fs.promises!'");
+    console.info('File created successfully with Node.js v13 fs.promises!');
+  } catch (error) {
+    console.error(error);
   }
-  writable.end(); // (C)
-  // Wait until done. Throws if there are errors.
-  await finished(writable);
 }
-
-export { writeIterableToFile as default};
-// await writeIterableToFile(
-//   ['One', ' line of text.\n'], 'tmp/log.txt');
-
-// assert.equal(
-//   fs.readFileSync('tmp/log.txt', {encoding: 'utf8'}),
-//   'One line of text.\n');

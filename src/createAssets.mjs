@@ -1,9 +1,10 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-console */
-import fs from 'fs';
-import * as util from 'util';
-import * as stream from 'stream';
-import {once} from 'events';
+// import fs from 'fs';
+import { promises as fs } from 'fs';
+// import * as util from 'util';
+// import * as stream from 'stream';
+// import { once } from 'events';
 
 import config from './config/config.mjs';
 import release from './version.mjs';
@@ -14,19 +15,19 @@ const dao = new AppDAO(config.db.path);
 
 console.log('Creating results');
 
-const foo = async () => {
-  await writeIterableToFile(
-    ['One', ' line of text.\n', 'Two\n'], '../public/test.txt');
-}
+// const foo = async () => {
+//   await writeIterableToFile(
+//     ['One', ' line of text.\n', 'Two\n'], '../public/test.txt',
+//   );
+// };
 
 
+writeShipyard();
 
-// writeShipyard();
+writeStoredModules();
 
-// writeStoredModules();
-
-function writeShipyard() {
-  const logStream = fs.createWriteStream('./public/syard.html', { flags: 'w' });
+async function writeShipyard() {
+  const filePath = './public/syard.html';
 
   const cmdrSql = `  SELECT cmdr, json_extract(jsondata,'$.StarSystem') as star, json_extract(jsondata,'$.StationName') as station,
                             round(julianday('now') - jnltime) as days_old FROM stg_st_ships`;
@@ -34,29 +35,29 @@ function writeShipyard() {
   const shipSql = `select cmdr, shiptype, shipname, star, value, xfer_cost, xfer_time, jnltime, days_old, coriolis 
                      from v_ship_list`;
 
-  writeHeader(logStream, 'CMDR Status');
+  await writeHeader(filePath, 'CMDR Status');
 
-  dao.db.all(cmdrSql, [], (dberr, rows) => {
+  dao.db.all(cmdrSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach((row) => {
-      logStream.write(`CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
+    rows.forEach(async (row) => {
+      await fs.appendFile(filePath, `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
-
-    logStream.write('</p><h4 class="p-1">List of Ships</h4>\n');
-    logStream.write('<table class="table table-striped">\n');
-    logStream.write('<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
-                  + '<th>Xfer Cost</th><th>Xfer Mins</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
   });
 
 
-  dao.db.all(shipSql, [], (dberr, rows) => {
+  await fs.appendFile(filePath, '</p><h4 class="p-1">List of Ships</h4>\n');
+  await fs.appendFile(filePath, '<table class="table table-striped">\n');
+  await fs.appendFile(filePath, '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
+                  + '<th>Xfer Cost</th><th>Xfer Mins</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
+
+  dao.db.all(shipSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach((row) => {
-      logStream.write('<tr>'
+    rows.forEach(async (row) => {
+      await fs.appendFile(filePath, '<tr>'
             + `<td>${row.cmdr}</td>`
             + `<td>${row.shiptype}</td>`
             + `<td>${row.shipname}</td>`
@@ -70,15 +71,13 @@ function writeShipyard() {
             + '</tr>\n');
     });
 
-    logStream.write(`</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
-    logStream.close();
+    await fs.appendFile(filePath, `</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
   });
 }
 
 
-
-function writeStoredModules() {
-  const logStream = fs.createWriteStream('./public/stmods.html', { flags: 'w' });
+async function writeStoredModules() {
+  const filePath = './public/stmods.html';
 
   const cmdrSql = 'select * from v_cmdr_module_summary';
 
@@ -86,32 +85,32 @@ function writeStoredModules() {
                             "size","type",blueprint,"Level",Quality,BuyPrice,Hot
                        from v_stored_modules;`;
 
-  writeHeader(logStream, 'CMDR Stored Module Stats');
+  await writeHeader('./public/stmods.html', 'CMDR Stored Module Stats');
 
   let cmdr = 'none';
 
-  dao.db.all(cmdrSql, [], (dberr, rows) => {
+  dao.db.all(cmdrSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach((row) => {
+    rows.forEach(async (row) => {
       const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
-      logStream.write(`${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
+      await fs.appendFile(filePath, `${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
                     + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
       cmdr = row.cmdr;
     });
-    logStream.write('</p><h4 class="p-1">List of Stored Modules</h4>\n');
-    logStream.write('<table class="table table-striped">\n');
-    logStream.write('<tr><th>CMDR</th><th>System</th><th>Slot Type</th><th>Item Group</th><th>Item</th><th>Size</th><th>Type</th>'
+    await fs.appendFile(filePath, '</p><h4 class="p-1">List of Stored Modules</h4>\n');
+    await fs.appendFile(filePath, '<table class="table table-striped">\n');
+    await fs.appendFile(filePath, '<tr><th>CMDR</th><th>System</th><th>Slot Type</th><th>Item Group</th><th>Item</th><th>Size</th><th>Type</th>'
                   + '<th>Blueprint</th><th>Level</th><th>Quality</th><th>Buy Price</th><th>Hot</th></tr>\n');
   });
 
-  dao.db.all(moduleSql, [], (dberr, rows) => {
+  dao.db.all(moduleSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach((row) => {
-      logStream.write('<tr>'
+    rows.forEach(async (row) => {
+      await fs.appendFile(filePath, '<tr>'
               + `<td>${row.cmdr}</td>`
               + `<td>${row.StarSystem}</td>`
               + `<td>${row.slot_type}</td>`
@@ -127,32 +126,30 @@ function writeStoredModules() {
               + '</tr>\n');
     });
 
-    logStream.write(`</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
-    logStream.close();
+    await fs.appendFile(filePath, `</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
   });
 }
 
-function writeHeader(logStream, mainTitle) {
-  logStream.write('<!DOCTYPE html><html lang="en">\n');
-  logStream.write('<head>\n');
-  logStream.write('<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
+async function writeHeader(filePath, mainTitle) {
+  await fs.writeFile(filePath, '<!DOCTYPE html><html lang="en">\n', 'utf-8');
+  await fs.appendFile(filePath, '<head>\n', 'utf-8');
+  await fs.appendFile(filePath, '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
     + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
-    + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
-  logStream.write('</head><body><div translate="no" class="notranslate">\n');
-  logStream.write(`<h4 class="p-1">${mainTitle}</h4><p>\n`);
+    + '<link rel="shortcut icon" href="../images/favicon.ico">\n', 'utf-8');
+  await fs.appendFile(filePath, '</head><body><div translate="no" class="notranslate">\n', 'utf-8');
+  await fs.appendFile(filePath, `<h4 class="p-1">${mainTitle}</h4><p>\n`, 'utf-8');
 }
 
-const finished = util.promisify(stream.finished); // (A)
-
-async function writeIterableToFile(iterable, filePath) {
-  const writable = fs.createWriteStream(filePath, {encoding: 'utf8'});
-  for await (const chunk of iterable) {
-    if (!writable.write(chunk)) { // (B)
-      // Handle backpressure
-      await once(writable, 'drain');
-    }
-  }
-  writable.end(); // (C)
-  // Wait until done. Throws if there are errors.
-  await finished(writable);
-}
+// function writeLineToStream(line, stream) {
+//   // Return new promise
+//   return new Promise(((resolve, reject) => {
+//     // Do async job
+//     request.get(options, (err, resp, body) => {
+//       if (err) {
+//         reject(err);
+//       } else {
+//         resolve(body);
+//       }
+//     });
+//   }));
+// }
