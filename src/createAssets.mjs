@@ -1,26 +1,14 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-console */
-// import fs from 'fs';
 import { promises as fs } from 'fs';
-// import * as util from 'util';
-// import * as stream from 'stream';
-// import { once } from 'events';
 
 import config from './config/config.mjs';
 import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
-// import writeIterableToFile from './writeFile.mjs';
 
 const dao = new AppDAO(config.db.path);
 
 console.log('Creating results');
-
-// const foo = async () => {
-//   await writeIterableToFile(
-//     ['One', ' line of text.\n', 'Two\n'], '../public/test.txt',
-//   );
-// };
-
 
 writeShipyard();
 
@@ -37,11 +25,11 @@ async function writeShipyard() {
 
   await writeHeader(filePath, 'CMDR Status');
 
-  dao.db.all(cmdrSql, [], async (dberr, rows) => {
+  await dao.db.all(cmdrSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach(async (row) => {
+    await rows.forEach(async (row) => {
       await fs.appendFile(filePath, `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
   });
@@ -52,7 +40,7 @@ async function writeShipyard() {
   await fs.appendFile(filePath, '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
                   + '<th>Xfer Cost</th><th>Xfer Mins</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
 
-  dao.db.all(shipSql, [], async (dberr, rows) => {
+  await dao.db.all(shipSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
@@ -89,27 +77,28 @@ async function writeStoredModules() {
 
   let cmdr = 'none';
 
-  dao.db.all(cmdrSql, [], async (dberr, rows) => {
+  await dao.db.all(cmdrSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach(async (row) => {
+    await rows.forEach(async (row) => {
       const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
       await fs.appendFile(filePath, `${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
                     + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
       cmdr = row.cmdr;
     });
+    
     await fs.appendFile(filePath, '</p><h4 class="p-1">List of Stored Modules</h4>\n');
     await fs.appendFile(filePath, '<table class="table table-striped">\n');
     await fs.appendFile(filePath, '<tr><th>CMDR</th><th>System</th><th>Slot Type</th><th>Item Group</th><th>Item</th><th>Size</th><th>Type</th>'
                   + '<th>Blueprint</th><th>Level</th><th>Quality</th><th>Buy Price</th><th>Hot</th></tr>\n');
   });
 
-  dao.db.all(moduleSql, [], async (dberr, rows) => {
+  await dao.db.all(moduleSql, [], async (dberr, rows) => {
     if (dberr) {
       throw dberr;
     }
-    rows.forEach(async (row) => {
+    await rows.forEach(async (row) => {
       await fs.appendFile(filePath, '<tr>'
               + `<td>${row.cmdr}</td>`
               + `<td>${row.StarSystem}</td>`
@@ -139,17 +128,3 @@ async function writeHeader(filePath, mainTitle) {
   await fs.appendFile(filePath, '</head><body><div translate="no" class="notranslate">\n', 'utf-8');
   await fs.appendFile(filePath, `<h4 class="p-1">${mainTitle}</h4><p>\n`, 'utf-8');
 }
-
-// function writeLineToStream(line, stream) {
-//   // Return new promise
-//   return new Promise(((resolve, reject) => {
-//     // Do async job
-//     request.get(options, (err, resp, body) => {
-//       if (err) {
-//         reject(err);
-//       } else {
-//         resolve(body);
-//       }
-//     });
-//   }));
-// }
