@@ -9,7 +9,8 @@ import URLSafeBase64 from 'urlsafe-base64';
 
 import config from './config/config.mjs';
 import release from './version.mjs';
-import AppDAO from './db/dao.mjs';
+// import AppDAO from './db/dao.mjs';
+import AppDAO from './db/dao-as.mjs';
 
 const dao = new AppDAO(config.db.path);
 
