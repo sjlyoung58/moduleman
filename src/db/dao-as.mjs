@@ -1,12 +1,16 @@
 /* eslint-disable no-console */
 import Database from 'sqlite-async';
+// const Database = require('sqlite-async');
 
-class AppDAO {
- 
+// eslint-disable-next-line import/prefer-default-export
+export default class AppDAO {
   constructor(dbFilePath) {
-    Database.open(dbFilePath).then(_db => {
-      this.db = _db
+    console.log('Calling database constructor for ', dbFilePath);
+    Database.open(dbFilePath, Database.OPEN_READWRITE).then((_db) => {
       console.log('Connected to database');
+      this.db = _db;
+    }).catch((err) => {
+      console.log('Could not connect to database', err);
     });
 
     // this.db = new sqlite-async.Database(dbFilePath, sqlite3.OPEN_READWRITE, (err) => {
@@ -19,11 +23,25 @@ class AppDAO {
     // });
   }
 
+  // initialise1() {
+  //   this.db.transaction( this.db => {
+  //     return Promise.all([
+  //         this.db.run('DELETE FROM stg_jnl'),
+  //         this.db.run('DELETE FROM stg_loadout'),
+  //         this.db.run('DELETE FROM stg_st_mods'),
+  //         this.db.run('DELETE FROM stg_st_ships')
+  //     ])
+  // })
+
+  // }
+
   initialise() {
-    this.run('DELETE FROM stg_jnl');
-    this.run('DELETE FROM stg_loadout');
-    this.run('DELETE FROM stg_st_mods');
-    this.run('DELETE FROM stg_st_ships');
+    return this.db.transaction((db) => Promise.all([
+      this.db.run('DELETE FROM stg_jnl'),
+      this.db.run('DELETE FROM stg_loadout'),
+      this.db.run('DELETE FROM stg_st_mods'),
+      this.db.run('DELETE FROM stg_st_ships'),
+    ]));
   }
 
   upsertStShips(params) {
@@ -83,4 +101,4 @@ class AppDAO {
   }
 }
 
-export default AppDAO;
+// exports.AppDAO = AppDAO();

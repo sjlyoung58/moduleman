@@ -9,15 +9,10 @@ import URLSafeBase64 from 'urlsafe-base64';
 
 import config from './config/config.mjs';
 import release from './version.mjs';
-// import AppDAO from './db/dao.mjs';
-import AppDAO from './db/dao-as.mjs';
+import AppDAO from './db/dao.mjs';
+// import AppDAO from './db/dao-as.mjs';
 
-const dao = new AppDAO(config.db.path);
-
-dao.initialise();
-
-processJournals();
-
+let dao;
 
 function processJournals() {
   console.log(`Fleet Manager version ${release}`);
@@ -88,3 +83,12 @@ function parseJSON(json, jnlfile) {
   }
   return parsed; // will be ParseError if problem input
 }
+
+
+function main() {
+  dao = new AppDAO(config.db.path);
+  dao.initialise();
+  processJournals();
+}
+
+main();

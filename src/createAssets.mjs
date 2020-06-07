@@ -30,14 +30,14 @@ async function writeShipyard() {
       throw dberr;
     }
     await rows.forEach(async (row) => {
-      await fs.appendFile(filePath, `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
+      await fs.appendFileSync(filePath, `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
   });
 
 
-  await fs.appendFile(filePath, '</p><h4 class="p-1">List of Ships</h4>\n');
-  await fs.appendFile(filePath, '<table class="table table-striped">\n');
-  await fs.appendFile(filePath, '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
+  await fs.appendFileSync(filePath, '</p><h4 class="p-1">List of Ships</h4>\n');
+  await fs.appendFileSync(filePath, '<table class="table table-striped">\n');
+  await fs.appendFileSync(filePath, '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
                   + '<th>Xfer Cost</th><th>Xfer Mins</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
 
   await dao.db.all(shipSql, [], async (dberr, rows) => {
@@ -87,7 +87,7 @@ async function writeStoredModules() {
                     + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
       cmdr = row.cmdr;
     });
-    
+
     await fs.appendFile(filePath, '</p><h4 class="p-1">List of Stored Modules</h4>\n');
     await fs.appendFile(filePath, '<table class="table table-striped">\n');
     await fs.appendFile(filePath, '<tr><th>CMDR</th><th>System</th><th>Slot Type</th><th>Item Group</th><th>Item</th><th>Size</th><th>Type</th>'
