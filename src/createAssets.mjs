@@ -5,10 +5,13 @@ import { promises as fs } from 'fs';
 import config from './config/config.mjs';
 import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
+import createShipyard from './htmlgen/shipyard.mjs';
 
 const dao = new AppDAO(config.db.path);
 
 console.log('Creating results');
+
+createShipyard(dao);
 
 writeShipyard();
 
@@ -30,14 +33,14 @@ async function writeShipyard() {
       throw dberr;
     }
     await rows.forEach(async (row) => {
-      await fs.appendFileSync(filePath, `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
+      await fs.appendFile(filePath, `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
   });
 
 
-  await fs.appendFileSync(filePath, '</p><h4 class="p-1">List of Ships</h4>\n');
-  await fs.appendFileSync(filePath, '<table class="table table-striped">\n');
-  await fs.appendFileSync(filePath, '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
+  await fs.appendFile(filePath, '</p><h4 class="p-1">List of Ships</h4>\n');
+  await fs.appendFile(filePath, '<table class="table table-striped">\n');
+  await fs.appendFile(filePath, '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
                   + '<th>Xfer Cost</th><th>Xfer Mins</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
 
   await dao.db.all(shipSql, [], async (dberr, rows) => {
