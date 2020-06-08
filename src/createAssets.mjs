@@ -7,15 +7,7 @@ import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
 import createShipyard from './htmlgen/shipyard.mjs';
 
-const dao = new AppDAO(config.db.path);
-
-console.log('Creating results');
-
-createShipyard(dao);
-
-writeShipyard();
-
-writeStoredModules();
+let dao;
 
 async function writeShipyard() {
   const filePath = './public/syard.html';
@@ -131,3 +123,14 @@ async function writeHeader(filePath, mainTitle) {
   await fs.appendFile(filePath, '</head><body><div translate="no" class="notranslate">\n', 'utf-8');
   await fs.appendFile(filePath, `<h4 class="p-1">${mainTitle}</h4><p>\n`, 'utf-8');
 }
+
+async function main() {
+  dao = await new AppDAO(config.db.path);
+  await dao.init();
+  console.log('Creating results');
+  await createShipyard(dao);
+  await writeShipyard();
+  await writeStoredModules();
+}
+
+main();

@@ -85,9 +85,10 @@ function parseJSON(json, jnlfile) {
 }
 
 
-function main() {
+async function main() {
   dao = new AppDAO(config.db.path);
-  dao.initialise();
+  await dao.init();
+  await dao.dbSetup();
   processJournals();
 }
 
