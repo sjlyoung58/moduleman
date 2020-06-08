@@ -1,6 +1,8 @@
+/* eslint-disable import/extensions */
 /* eslint-disable no-console */
 import fs from 'fs';
 import es from 'event-stream';
+import release from '../version.mjs';
 
 const cmdrSql = `  SELECT cmdr, json_extract(jsondata,'$.StarSystem') as star, json_extract(jsondata,'$.StationName') as station,
 round(julianday('now') - jnltime) as days_old FROM stg_st_ships`;
@@ -12,27 +14,10 @@ let cmdrRows;
 let shipRows;
 
 async function createShipyard(dao) {
-  console.log('Starting...', dao);
-  console.time('done in');
+  console.time('syard.html written in');
 
   cmdrRows = await dao.all(cmdrSql, []);
-  // await dao.db.all(cmdrSql, [], async (dberr, rows) => {
-  //   if (dberr) {
-  //     throw dberr;
-  //   }
-  //   cmdrRows = rows;
-  //   console.log('Retrieved cmdrRows');
-  // });
-
   shipRows = await dao.all(shipSql, []);
-  // await dao.db.all(shipSql, [], async (dberr, rows) => {
-  //   if (dberr) {
-  //     throw dberr;
-  //   }
-  //   shipRows = rows;
-  //   console.log('Retrieved shipRows');
-  // });
-
 
   es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Status');
@@ -41,13 +26,35 @@ async function createShipyard(dao) {
       await waitWrite(this, 'data', `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
 
-    await waitWrite(this, 'data', 'after CMDR rows');
+    await waitWrite(this, 'data', '</p><h4 class="p-1">List of Ships</h4>\n');
+    await waitWrite(this, 'data', '<table class="table table-striped">\n');
+    await waitWrite(this, 'data', '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Value</th>'
+                    + '<th>Xfer Cost</th><th>Xfer Mins</th><th>Coriolis</th><th>Days Old</th><th>Date/Time</th></tr>\n');
+
+    shipRows.forEach(async (row) => {
+      await waitWrite(this, 'data', '<tr>'
+                            + `<td>${row.cmdr}</td>`
+                            + `<td>${row.shiptype}</td>`
+                            + `<td>${row.shipname}</td>`
+                            + `<td>${row.star}</td>`
+                            + `<td>${parseInt(row.value, 10).toLocaleString()}</td>`
+                            + `<td>${parseInt(row.xfer_cost, 10).toLocaleString()}</td>`
+                            + `<td>${row.xfer_time}</td>`
+                            + `<td><a href='${row.coriolis} target="_blank"'>view ship</a></td>`
+                            + `<td>${row.days_old}</td>`
+                            + `<td>${row.jnltime}</td>`
+                            + '</tr>\n');
+    });
+
+    await waitWrite(this, 'data', `</table><h6 style="text-align:center">Version ${release}</h6></div></body></html>\n`);
+
+    // await waitWrite(this, 'data', 'after CMDR rows');
 
     await waitWrite(this, 'end');
     next();
-  }).pipe(fs.createWriteStream('./public/test.html'));
+  }).pipe(fs.createWriteStream('./public/syard.html'));
 
-  console.timeEnd('done in');
+  console.timeEnd('syard.html written in');
 }
 
 async function waitWrite(evStr, mode, line) {

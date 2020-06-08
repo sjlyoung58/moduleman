@@ -87,34 +87,30 @@ class AppDAO {
   }
 
   // Promise based functions for async await usage
-  
+
   run2(query) {
-    // eslint-disable-next-line no-unused-vars
-    const { db } = this;
-    return new Promise(function foo(resolve, reject) {
+    return new Promise(((resolve, reject) => {
       this.db.run(query,
         (err) => {
           if (err) reject(err.message);
           else resolve(true);
         });
-    }.bind(this));
+    }));
   }
 
   all(query, params) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(((resolve, reject) => {
       this.db.all(query, params, (err, rows) => {
         if (err) reject(err);
         else {
           resolve(rows);
         }
       });
-    }.bind(this));
+    }));
   }
 
   // eslint-disable-next-line class-methods-use-this
   async open(path) {
-    // eslint-disable-next-line no-unused-vars
-    // const { db } = this;
     return new Promise(((resolve, reject) => {
       const database = new sqlite3.Database(path,
         ((err) => {

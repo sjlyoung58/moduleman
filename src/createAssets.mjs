@@ -129,7 +129,7 @@ async function main() {
   await dao.init();
   console.log('Creating results');
   await createShipyard(dao);
-  await writeShipyard();
+  // await writeShipyard();
   await writeStoredModules();
 }
 
