@@ -86,6 +86,8 @@ class AppDAO {
     });
   }
 
+  // Promise based functions for async await usage
+  
   run2(query) {
     // eslint-disable-next-line no-unused-vars
     const { db } = this;
@@ -95,24 +97,18 @@ class AppDAO {
           if (err) reject(err.message);
           else resolve(true);
         });
-    });
+    }.bind(this));
   }
 
-  // eslint-disable-next-line class-methods-use-this
   all(query, params) {
-    // eslint-disable-next-line no-unused-vars
-    // const { db } = this;
     return new Promise(function (resolve, reject) {
-      // eslint-disable-next-line no-param-reassign
-      if (params === undefined) params = [];
-
       this.db.all(query, params, (err, rows) => {
         if (err) reject(err);
         else {
           resolve(rows);
         }
       });
-    });
+    }.bind(this));
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -126,18 +122,6 @@ class AppDAO {
           else resolve(database);
         }));
     }));
-  }
-
-  async open2(path) {
-    // eslint-disable-next-line no-unused-vars
-    const { db } = this;
-    return new Promise(function (resolve, reject) {
-      this.db = new sqlite3.Database(path,
-        ((err) => {
-          if (err) reject(err);
-          else resolve(`${path} opened`);
-        }));
-    });
   }
 }
 

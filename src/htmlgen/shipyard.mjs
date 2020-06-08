@@ -34,7 +34,7 @@ async function createShipyard(dao) {
   // });
 
 
-  es.readable(async function foo(next) {
+  es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Status');
 
     await cmdrRows.forEach(async (row) => {
