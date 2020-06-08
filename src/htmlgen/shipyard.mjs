@@ -10,14 +10,11 @@ round(julianday('now') - jnltime) as days_old FROM stg_st_ships`;
 const shipSql = `select cmdr, shiptype, shipname, star, value, xfer_cost, xfer_time, jnltime, days_old, coriolis 
 from v_ship_list`;
 
-let cmdrRows;
-let shipRows;
-
 async function createShipyard(dao) {
   console.time('syard.html written in');
 
-  cmdrRows = await dao.all(cmdrSql, []);
-  shipRows = await dao.all(shipSql, []);
+  const cmdrRows = await dao.all(cmdrSql, []);
+  const shipRows = await dao.all(shipSql, []);
 
   es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Status');
