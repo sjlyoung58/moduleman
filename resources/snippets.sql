@@ -28,6 +28,7 @@ select * from v_loadout;
 SELECT 'jnl' as tab, count(*) FROM stg_jnl union
 SELECT 'loadout' as tab, count(*) FROM stg_loadout union
 SELECT 'mods' as tab, count(*) FROM stg_st_mods union 
+SELECT 'mats' as tab, count(*) FROM stg_mats union 
 SELECT 'ships' as tab, count(*) FROM stg_st_ships;
 
 delete from stg_jnl;
@@ -442,3 +443,38 @@ select s.ship_id,
 ;
 
 
+
+--===================== materials =====================--
+
+select mat.cmdr,
+       tre.*,
+       date(mat.jnltime) || ' ' || time(mat.jnltime) as jnltime,
+       mat.jsondata 
+ from stg_mats mat, json_tree(mat.jsondata,'$') tre;
+
+drop view v_materials;
+
+create view v_materials as
+with mats as (
+select mat.cmdr, mat.jnltime,
+       ech.*
+ from stg_mats mat, json_each(mat.jsondata,'$.Raw') ech
+union
+select mat.cmdr, mat.jnltime,
+       ech.*
+ from stg_mats mat, json_each(mat.jsondata,'$.Encoded') ech
+union
+select mat.cmdr, mat.jnltime,
+       ech.*
+ from stg_mats mat, json_each(mat.jsondata,'$.Manufactured') ech
+)
+select cmdr, 
+       date(jnltime) || ' ' || time(jnltime) as jnltime,
+       replace(path,'$.',''), 
+       coalesce(json_extract(value, '$.Name_Localised'),json_extract(value, '$.Name')) as name,
+       json_extract(value, '$.Count') as qty
+       --,value
+  from mats
+ order by cmdr, path desc, key;
+
+select * from v_materials;

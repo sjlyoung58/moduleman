@@ -17,7 +17,7 @@ let dao;
 function processJournals() {
   console.log(`Fleet Manager version ${release}`);
   console.log(`Reading journals from ${config.jnl.path}`);
-  console.log('l = loadout found/processed, m = modules, s = shipyard');
+  console.log('l = loadout found/processed, m = modules, s = shipyard, t = materials');
   fs.readdir(config.jnl.path, (err, files) => {
     if (err) {
       console.log('Error getting directory information.');
@@ -53,6 +53,10 @@ function processJournal(file) {
         break;
       case 'StoredModules':
         dao.upsertStMods([cmdr, ts, line]);
+        // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
+        break;
+      case 'Materials':
+        dao.upsertMats([cmdr, ts, line]);
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'StoredShips':

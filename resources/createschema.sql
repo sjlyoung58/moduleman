@@ -25,6 +25,12 @@ CREATE TABLE IF NOT EXISTS stg_st_mods (
     jsondata TEXT,
     CONSTRAINT st_mods_pk PRIMARY KEY (cmdr));
 
+CREATE TABLE IF NOT EXISTS stg_mats (
+    cmdr TEXT,
+    jnltime REAL, 
+    jsondata TEXT,
+    CONSTRAINT st_mats_pk PRIMARY KEY (cmdr));
+
 CREATE TABLE engineer (
 	engineer TEXT,
 	base TEXT,

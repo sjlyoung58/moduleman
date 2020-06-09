@@ -68,6 +68,20 @@ class AppDAO {
     process.stdout.write('m');
   }
 
+
+  upsertMats(params) {
+    const insStg = `INSERT INTO stg_mats
+    (cmdr, jnltime, jsondata)
+    VALUES(?, julianday(?), ?)
+    ON CONFLICT(cmdr) DO UPDATE
+      SET jnltime = excluded.jnltime, jsondata = excluded.jsondata
+    WHERE excluded.jnltime > stg_mats.jnltime 
+    `;
+
+    this.run(insStg, params);
+    process.stdout.write('t');
+  }
+
   insertStg(params) {
     const insStg = `INSERT INTO stg_jnl
     (cmdr, jnltime, event, jsondata)

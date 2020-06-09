@@ -1,12 +1,18 @@
 testjournals/*.log
 testjournals/*.json
 testjournals/*.cache
+testjournals/full/*
 */.DS_Store
 .DS_Store
 db/*.sqlite3
-public/links.html
-public/syard.html
-public/stmods.html
+
+public/*.html
+!public/index.html
+# public/syard.html
+# public/stmods.html
+# public/test.html
+# public/mats.html
+
 src/config/config.mjs
 
 # Logs
