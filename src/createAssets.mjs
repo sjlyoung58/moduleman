@@ -7,6 +7,7 @@ import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
 import createShipyard from './htmlgen/shipyard.mjs';
 import createStoredMods from './htmlgen/storedMods.mjs';
+import createMaterials from './htmlgen/materials.mjs';
 
 async function main() {
   const dao = await new AppDAO(config.db.path);
@@ -14,8 +15,7 @@ async function main() {
   console.log('Creating results');
   await createShipyard(dao);
   await createStoredMods(dao);
-  // await writeShipyard();
-  // await writeStoredModules();
+  await createMaterials(dao);
 }
 
 main();

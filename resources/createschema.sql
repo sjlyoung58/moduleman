@@ -272,3 +272,33 @@ select distinct slot from slots
    and slot not in('CargoHatch','ShipCockpit','PlanetaryApproachSuite','VesselVoice','PaintJob','FuelTank','Radar')
  order by slot;
 
+create view v_materials as
+with mats as (
+select mat.cmdr, mat.jnltime,
+       ech.*
+ from stg_mats mat, json_each(mat.jsondata,'$.Raw') ech
+union
+select mat.cmdr, mat.jnltime,
+       ech.*
+ from stg_mats mat, json_each(mat.jsondata,'$.Encoded') ech
+union
+select mat.cmdr, mat.jnltime,
+       ech.*
+ from stg_mats mat, json_each(mat.jsondata,'$.Manufactured') ech
+),
+pretty as (
+select cmdr, 
+       date(jnltime) || ' ' || time(jnltime) as jnltime,
+       replace(path,'$.','') as type, 
+       coalesce(json_extract(value, '$.Name_Localised'),json_extract(value, '$.Name')) as name,
+       json_extract(value, '$.Count') as qty
+       --,value
+  from mats
+)
+select cmdr, 
+       jnltime, 
+       "type", 
+       (UPPER(SUBSTR(name, 1, 1)) || SUBSTR(name, 2)) as name, 
+       qty
+  from pretty 
+ order by cmdr, "type" desc, name;
