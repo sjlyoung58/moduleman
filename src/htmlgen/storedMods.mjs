@@ -18,10 +18,10 @@ async function createStoredMods(dao) {
 
   es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Stored Module Stats');
-  
+
     let cmdr = 'none';
     cmdrRows.forEach(async (row) => {
-      console.log('Curr=', cmdr, ', this=', row.cmdr);
+      // console.log('Curr=', cmdr, ', this=', row.cmdr);
       const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
       waitWrite(this, 'data', `${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
                     + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
