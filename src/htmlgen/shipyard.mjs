@@ -37,7 +37,7 @@ async function createShipyard(dao) {
                             + `<td>${parseInt(row.value, 10).toLocaleString()}</td>`
                             + `<td>${parseInt(row.xfer_cost, 10).toLocaleString()}</td>`
                             + `<td>${row.xfer_time}</td>`
-                            + `<td><a href='${row.coriolis} target="_blank"'>view ship</a></td>`
+                            + `<td><a href="${row.coriolis}" target="_blank"'>view ship</a></td>`
                             + `<td>${row.days_old}</td>`
                             + `<td>${row.jnltime}</td>`
                             + '</tr>\n');
