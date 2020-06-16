@@ -442,19 +442,25 @@ select s.cmdr,l.ship_id, l.shiptype, l.shipname, l.star,
   from slots s
  inner join v_slots_of_interest v on v.slot = s.slot
  inner join v_ship_list l on l.cmdr = s.cmdr and l.ship_id = s.ship_id
-)
+),
+decode as (
 select cmdr, ship_id, shiptype, shipname, star, 
-       slot,
+       slot, item,
        case lower(json_extract(item_jsa,'$.itemParts[0]'))
          when 'int' then 'Internal'
          when 'hpt' then 
               case when json_extract(item_jsa,'$.itemParts[2]') = 'size0' 
-                     or then 'Utility' 
+                     or json_extract(item_jsa,'$.itemParts[' || usc || ']') = 'tiny' then 'Utility' 
               else 'Hardpoint' 
               end 
       -- use item at end = tiny (array length) hpt_heatsinklauncher_turret_tiny hpt_plasmapointdefence_turret_tiny hpt_chafflauncher_tiny
          else 'Hull'
        end as slot_type,
+       json_extract(item_jsa,'$.itemParts[0]') as it1,
+       json_extract(item_jsa,'$.itemParts[1]') as it2,
+       json_extract(item_jsa,'$.itemParts[2]') as it3,
+       json_extract(item_jsa,'$.itemParts[3]') as it4,
+       json_extract(item_jsa,'$.itemParts[4]') as it5,
        item, 
        item_jsa, usc,
        engineer, 
@@ -465,14 +471,67 @@ select cmdr, ship_id, shiptype, shipname, star,
        mods, 
        mod_count 
   from item_split
+ )
+ select cmdr,  ship_id,  shiptype,  shipname,  star,  
+        slot_type,  
+        slot,
+--
+        it2 as item_group,
+       --Name_Localised as Item,
+       case slot_type
+         when 'Internal' then case when it2 in('dronecontrol') then it4 else it3 end
+         when 'Hardpoint' then case when it2 in('mining') then it5 else it4 end
+         when 'Utility' then it3
+         else it3
+       end as "size",
+       case slot_type
+         when 'Internal' then case when it2 in('dronecontrol') then it5 else it4 end
+         when 'Hardpoint' then case when it2 in('mining') then it4 else it3 end
+         when 'Utility' then it4
+         else it1
+       end as "type", 
+--
+       it1,  it2,  it3,  it4, it5,  
+        item,  
+        item_jsa,  usc,  
+        engineer,  blueprint,  exp_effect,  "level",  quality,  mods,  mod_count
+   from decode
 --  join json_each(j_slot,'$.Engineering.Modifiers') m
 -- where i5 is not null and l5 is null
 -- where item like 'hpt_crimescanner%'
- order by cmdr DESC, slot, item, json_array_length(mods) desc
+ order by usc desc, cmdr DESC, slot, item, json_array_length(mods) desc
 ;
 
-SELECT l.cmdr, l.ship_id, l.shiptype, l.shipname, l.star, value, xfer_cost, xfer_time, jnltime, days_old, jsondata, coriolis FROM v_ship_list l;
-
+select * from stg_loadout sl;
+/*
+        json_extract(name_jsa,'$.nameParts[0]') as np1,
+       json_extract(name_jsa,'$.nameParts[1]') as np2,
+       json_extract(name_jsa,'$.nameParts[2]') as np3,
+       json_extract(name_jsa,'$.nameParts[3]') as np4,
+       json_extract(name_jsa,'$.nameParts[4]') as np5,
+       name_jsa,
+       EngineerModifications,
+       "Level",Quality,StorageSlot,StarSystem,MarketID,TransferCost,TransferTime,BuyPrice,Hot
+  from csv
+),
+nme as (
+select cmdr,
+       slot_type,
+       np2 as item_group,
+       Name_Localised as Item,
+       case slot_type
+         when 'Internal' then case when np2 in('dronecontrol') then np4 else np3 end
+         when 'Hardpoint' then case when np2 in('mining') then np5 else np4 end
+         when 'Utility' then np3
+         else np3
+       end as "size",
+       case slot_type
+         when 'Internal' then case when np2 in('dronecontrol') then np5 else np4 end
+         when 'Hardpoint' then case when np2 in('mining') then np4 else np3 end
+         when 'Utility' then np4
+         else np1
+       end as "type", 
+ */
 
 --===================== materials =====================--
 
