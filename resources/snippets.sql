@@ -397,7 +397,8 @@ select distinct cast(slot as TEXT) as slot
 select * from v_slots_of_interest;
 
 with slots as (
-select json_extract(ld.jsondata,'$.ShipID') as ship_id,
+select ld.cmdr,
+       json_extract(ld.jsondata,'$.ShipID') as ship_id,
        json_extract(ld.jsondata,'$.ShipName') as ship_name, 
        json_extract(t1.value,'$.Slot') as slot, 
        json_extract(t1.value,'$.Item') as item, 
@@ -412,36 +413,65 @@ select json_extract(ld.jsondata,'$.ShipID') as ship_id,
        json_each(ld.jsondata,'$.Modules') t1
        --json_each(t1.value,'$.Engineering.Modifiers') t2
 -- where json_extract(ld.jsondata,'$.ShipID') IN(2)
-)
-select s.ship_id,
-       s.ship_name,
+),
+item_split as (
+select s.cmdr,l.ship_id, l.shiptype, l.shipname, l.star,
        s.slot,
        s.item,
+       length(s.item) - length(REPLACE(s.item, '_', '')) as usc,
+       '{"itemParts":["' || replace(replace(replace(s.item,'_','","'),',"item;',''),'$','') || '"]}' as item_jsa, --json(' { "this" : "is", "a": [ "test" ] } ') → '{"this":"is","a":["test"]}'
        s.engineer,
        s.blueprint,
        s.exp_effect,
        s."level",
        s.quality,
-       json_extract(s.mods,'$[0].Label') as i0, json_extract(s.mods,'$[0].Value') as v0, json_extract(s.mods,'$[0].OriginalValue') as o0, json_extract(s.mods,'$[0].LessIsGood') as l0,
-       json_extract(s.mods,'$[1].Label') as i1, json_extract(s.mods,'$[1].Value') as v1, json_extract(s.mods,'$[1].OriginalValue') as o1, json_extract(s.mods,'$[1].LessIsGood') as l1,
-       json_extract(s.mods,'$[2].Label') as i2, json_extract(s.mods,'$[2].Value') as v2, json_extract(s.mods,'$[2].OriginalValue') as o2, json_extract(s.mods,'$[2].LessIsGood') as l2,
-       json_extract(s.mods,'$[3].Label') as i3, json_extract(s.mods,'$[3].Value') as v3, json_extract(s.mods,'$[3].OriginalValue') as o3, json_extract(s.mods,'$[3].LessIsGood') as l3,
-       json_extract(s.mods,'$[4].Label') as i4, json_extract(s.mods,'$[4].Value') as v4, json_extract(s.mods,'$[4].OriginalValue') as o4, json_extract(s.mods,'$[4].LessIsGood') as l4,
-       json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, 
-          json_extract(s.mods,'$[5].OriginalValue') as o5, coalesce(json_extract(s.mods,'$[5].Value'),json_extract(s.mods,'$[5].ValueStr_Localised')) as l5,
-       json_extract(s.mods,'$[6].Label') as i6, coalesce(json_extract(s.mods,'$[6].Value'),json_extract(s.mods,'$[6].ValueStr_Localised')) as v6, 
-          json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
-       json_extract(s.mods,'$[7].Label') as i7, coalesce(json_extract(s.mods,'$[7].Value'),json_extract(s.mods,'$[7].ValueStr_Localised')) as v7, 
-          json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
-       s.mods, json_array_length(s.mods) as modification_count
+       s.mods,
+--       json_extract(s.mods,'$[0].Label') as i0, json_extract(s.mods,'$[0].Value') as v0, json_extract(s.mods,'$[0].OriginalValue') as o0, json_extract(s.mods,'$[0].LessIsGood') as l0,
+--       json_extract(s.mods,'$[1].Label') as i1, json_extract(s.mods,'$[1].Value') as v1, json_extract(s.mods,'$[1].OriginalValue') as o1, json_extract(s.mods,'$[1].LessIsGood') as l1,
+--       json_extract(s.mods,'$[2].Label') as i2, json_extract(s.mods,'$[2].Value') as v2, json_extract(s.mods,'$[2].OriginalValue') as o2, json_extract(s.mods,'$[2].LessIsGood') as l2,
+--       json_extract(s.mods,'$[3].Label') as i3, json_extract(s.mods,'$[3].Value') as v3, json_extract(s.mods,'$[3].OriginalValue') as o3, json_extract(s.mods,'$[3].LessIsGood') as l3,
+--       json_extract(s.mods,'$[4].Label') as i4, json_extract(s.mods,'$[4].Value') as v4, json_extract(s.mods,'$[4].OriginalValue') as o4, json_extract(s.mods,'$[4].LessIsGood') as l4,
+--       json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, 
+--          json_extract(s.mods,'$[5].OriginalValue') as o5, coalesce(json_extract(s.mods,'$[5].Value'),json_extract(s.mods,'$[5].ValueStr_Localised')) as l5,
+--       json_extract(s.mods,'$[6].Label') as i6, coalesce(json_extract(s.mods,'$[6].Value'),json_extract(s.mods,'$[6].ValueStr_Localised')) as v6, 
+--          json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
+--       json_extract(s.mods,'$[7].Label') as i7, coalesce(json_extract(s.mods,'$[7].Value'),json_extract(s.mods,'$[7].ValueStr_Localised')) as v7, 
+--          json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
+        json_array_length(s.mods) as mod_count
 --       ,m.value
   from slots s
- inner join v_slots_of_interest v on v.slot = s.slot 
+ inner join v_slots_of_interest v on v.slot = s.slot
+ inner join v_ship_list l on l.cmdr = s.cmdr and l.ship_id = s.ship_id
+)
+select cmdr, ship_id, shiptype, shipname, star, 
+       slot,
+       case lower(json_extract(item_jsa,'$.itemParts[0]'))
+         when 'int' then 'Internal'
+         when 'hpt' then 
+              case when json_extract(item_jsa,'$.itemParts[2]') = 'size0' 
+                     or then 'Utility' 
+              else 'Hardpoint' 
+              end 
+      -- use item at end = tiny (array length) hpt_heatsinklauncher_turret_tiny hpt_plasmapointdefence_turret_tiny hpt_chafflauncher_tiny
+         else 'Hull'
+       end as slot_type,
+       item, 
+       item_jsa, usc,
+       engineer, 
+       blueprint, 
+       exp_effect, 
+       "level", 
+       quality, 
+       mods, 
+       mod_count 
+  from item_split
 --  join json_each(j_slot,'$.Engineering.Modifiers') m
- where i5 is not null and l5 is null
- order by json_array_length(s.mods) desc
+-- where i5 is not null and l5 is null
+-- where item like 'hpt_crimescanner%'
+ order by cmdr DESC, slot, item, json_array_length(mods) desc
 ;
 
+SELECT l.cmdr, l.ship_id, l.shiptype, l.shipname, l.star, value, xfer_cost, xfer_time, jnltime, days_old, jsondata, coriolis FROM v_ship_list l;
 
 
 --===================== materials =====================--
@@ -467,14 +497,28 @@ union
 select mat.cmdr, mat.jnltime,
        ech.*
  from stg_mats mat, json_each(mat.jsondata,'$.Manufactured') ech
-)
+),
+pretty as (
 select cmdr, 
        date(jnltime) || ' ' || time(jnltime) as jnltime,
-       replace(path,'$.',''), 
+       replace(path,'$.','') as type, 
        coalesce(json_extract(value, '$.Name_Localised'),json_extract(value, '$.Name')) as name,
        json_extract(value, '$.Count') as qty
        --,value
   from mats
- order by cmdr, path desc, key;
+)
+select cmdr, 
+       jnltime, 
+       "type", 
+       (UPPER(SUBSTR(name, 1, 1)) || SUBSTR(name, 2)) as name, 
+       qty
+  from pretty 
+ order by cmdr, "type" desc, name;
 
-select * from v_materials;
+-- (UPPER(SUBSTR(name, 1, 1)) || SUBSTR(name, 2)), 
+
+
+select cmdr, "type", name, qty from v_materials;
+
+SELECT distinct cmdr, jnltime FROM v_materials;
+
