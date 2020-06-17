@@ -476,30 +476,44 @@ select cmdr, ship_id, shiptype, shipname, star,
         slot_type,  
         slot,
 --
-        it2 as item_group,
-       --Name_Localised as Item,
+        lower(it2) as item_group,
        case slot_type
-         when 'Internal' then case when it2 in('dronecontrol') then it4 else it3 end
-         when 'Hardpoint' then case when it2 in('mining') then it5 else it4 end
+         --when 'Internal' then case when it2 in('dronecontrol') then it4 else it3 end
+         when 'Hardpoint' then 
+               case when lower(it2) in('mining') then it3
+                    when lower(it2) in('guardian') then lower(it2) || '_' || lower(it3)
+                    else lower(it2) || coalesce('_' || lower(it5),'')
+               end
+         when 'Hull' then it2 || '_' || it3
+--         when 'Internal' then it2 || '_' || it4
+         when 'Internal' then case when lower(it2) in('dronecontrol') then it2 || '_' || it5 else it2 || '_' || it4 end
+         else lower(it2) --|| '_' || coalesce(lower(it5),'')
+       end as "item",        
+        --lower(it2) || '_' || lower(it5) as item,
+       case slot_type
+         when 'Internal' then case when lower(it2) in('dronecontrol') then it4 else it3 end
+         when 'Hardpoint' then case when lower(it2) in('mining','guardian') then it5 else it4 end
          when 'Utility' then it3
+         when 'Hull' then it2
          else it3
        end as "size",
        case slot_type
          when 'Internal' then case when it2 in('dronecontrol') then it5 else it4 end
-         when 'Hardpoint' then case when it2 in('mining') then it4 else it3 end
+         when 'Hardpoint' then case when lower(it2) in('mining','guardian') then it4 else it3 end
          when 'Utility' then it4
+         when 'Hull' then it5
          else it1
        end as "type", 
 --
        it1,  it2,  it3,  it4, it5,  
-        item,  
+        item as full_desc,  
         item_jsa,  usc,  
         engineer,  blueprint,  exp_effect,  "level",  quality,  mods,  mod_count
    from decode
 --  join json_each(j_slot,'$.Engineering.Modifiers') m
 -- where i5 is not null and l5 is null
 -- where item like 'hpt_crimescanner%'
- order by usc desc, cmdr DESC, slot, item, json_array_length(mods) desc
+ order by slot, cmdr, slot, item, json_array_length(mods) desc
 ;
 
 select * from stg_loadout sl;
