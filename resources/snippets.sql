@@ -463,6 +463,7 @@ select cmdr, ship_id, shiptype, shipname, star,
        json_extract(item_jsa,'$.itemParts[4]') as it5,
        item, 
        item_jsa, usc,
+       json_extract(item_jsa,'$.itemParts[' || usc || ']') as last_part,
        engineer, 
        blueprint, 
        exp_effect, 
@@ -476,7 +477,7 @@ select cmdr, ship_id, shiptype, shipname, star,
         slot_type,  
         slot,
 --
-        lower(it2) as item_group,
+       case slot_type when 'Hull' then json_extract(item_jsa,'$.itemParts[' || (usc - 1) || ']') else lower(it2) end as item_group,
        case slot_type
          --when 'Internal' then case when it2 in('dronecontrol') then it4 else it3 end
          when 'Hardpoint' then 
@@ -484,7 +485,7 @@ select cmdr, ship_id, shiptype, shipname, star,
                     when lower(it2) in('guardian') then lower(it2) || '_' || lower(it3)
                     else lower(it2) || coalesce('_' || lower(it5),'')
                end
-         when 'Hull' then it2 || '_' || it3
+         when 'Hull' then replace(item, '_' || last_part,'')
 --         when 'Internal' then it2 || '_' || it4
          when 'Internal' then case when lower(it2) in('dronecontrol') then it2 || '_' || it5 else it2 || '_' || it4 end
          else lower(it2) --|| '_' || coalesce(lower(it5),'')
@@ -494,14 +495,14 @@ select cmdr, ship_id, shiptype, shipname, star,
          when 'Internal' then case when lower(it2) in('dronecontrol') then it4 else it3 end
          when 'Hardpoint' then case when lower(it2) in('mining','guardian') then it5 else it4 end
          when 'Utility' then it3
-         when 'Hull' then it2
+         when 'Hull' then ''
          else it3
        end as "size",
        case slot_type
          when 'Internal' then case when it2 in('dronecontrol') then it5 else it4 end
          when 'Hardpoint' then case when lower(it2) in('mining','guardian') then it4 else it3 end
          when 'Utility' then it4
-         when 'Hull' then it5
+         when 'Hull' then last_part
          else it1
        end as "type", 
 --
@@ -517,35 +518,10 @@ select cmdr, ship_id, shiptype, shipname, star,
 ;
 
 select * from stg_loadout sl;
-/*
-        json_extract(name_jsa,'$.nameParts[0]') as np1,
-       json_extract(name_jsa,'$.nameParts[1]') as np2,
-       json_extract(name_jsa,'$.nameParts[2]') as np3,
-       json_extract(name_jsa,'$.nameParts[3]') as np4,
-       json_extract(name_jsa,'$.nameParts[4]') as np5,
-       name_jsa,
-       EngineerModifications,
-       "Level",Quality,StorageSlot,StarSystem,MarketID,TransferCost,TransferTime,BuyPrice,Hot
-  from csv
-),
-nme as (
-select cmdr,
-       slot_type,
-       np2 as item_group,
-       Name_Localised as Item,
-       case slot_type
-         when 'Internal' then case when np2 in('dronecontrol') then np4 else np3 end
-         when 'Hardpoint' then case when np2 in('mining') then np5 else np4 end
-         when 'Utility' then np3
-         else np3
-       end as "size",
-       case slot_type
-         when 'Internal' then case when np2 in('dronecontrol') then np5 else np4 end
-         when 'Hardpoint' then case when np2 in('mining') then np4 else np3 end
-         when 'Utility' then np4
-         else np1
-       end as "type", 
- */
+
+SELECT distinct shiptype, shiptypel 
+  FROM v_stored_ships 
+ where replace(shiptype,'_','$') like '%$%';
 
 --===================== materials =====================--
 
