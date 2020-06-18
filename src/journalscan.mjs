@@ -36,11 +36,19 @@ function processJournals() {
   });
 }
 
+function daysDiff(timestamp1, timestamp2) {
+  var difference = timestamp1 - timestamp2;
+  var daysDifference = Math.floor(difference/1000/60/60/24);
+
+  return daysDifference;
+}
+
 function processJournal(file) {
   let cmdr = 'none';
   lineReader.eachLine(file, (line) => {
     const entry = parseJSON(line, file);
     const ts = entry.timestamp;
+    const daysOld = daysDiff(new Date(), new Date(ts));
     delete entry.timestamp;
     let ship;
     let buf;
@@ -69,6 +77,13 @@ function processJournal(file) {
         zship = URLSafeBase64.encode(zlib.gzipSync(buf));
         coriolis = `https://coriolis.io/import?data=${zship}`;
         dao.upsertLoadout([cmdr, entry.ShipID, ts, ship, coriolis]);
+        break;
+      case 'FSDJump':
+        process.stdout.write('f');
+        // dao.upsertStShips([cmdr, ts, line]);
+          if (daysOld < 5) {
+            console.log('FSDJump ',daysOld);          
+          }
         break;
       default:
         break;
