@@ -411,34 +411,20 @@ select ld.cmdr,
        t1.value as j_slot
   FROM stg_loadout ld, 
        json_each(ld.jsondata,'$.Modules') t1
-       --json_each(t1.value,'$.Engineering.Modifiers') t2
--- where json_extract(ld.jsondata,'$.ShipID') IN(2)
 ),
 item_split as (
 select s.cmdr,l.ship_id, l.shiptype, l.shipname, l.star,
        s.slot,
-       s.item,
+       lower(s.item) as item,
        length(s.item) - length(REPLACE(s.item, '_', '')) as usc,
-       '{"itemParts":["' || replace(replace(replace(s.item,'_','","'),',"item;',''),'$','') || '"]}' as item_jsa, --json(' { "this" : "is", "a": [ "test" ] } ') → '{"this":"is","a":["test"]}'
+       '{"itemParts":["' || replace(replace(replace(lower(s.item),'_','","'),',"item;',''),'$','') || '"]}' as item_jsa, --json(' { "this" : "is", "a": [ "test" ] } ') → '{"this":"is","a":["test"]}'
        s.engineer,
        s.blueprint,
        s.exp_effect,
        s."level",
        s.quality,
        s.mods,
---       json_extract(s.mods,'$[0].Label') as i0, json_extract(s.mods,'$[0].Value') as v0, json_extract(s.mods,'$[0].OriginalValue') as o0, json_extract(s.mods,'$[0].LessIsGood') as l0,
---       json_extract(s.mods,'$[1].Label') as i1, json_extract(s.mods,'$[1].Value') as v1, json_extract(s.mods,'$[1].OriginalValue') as o1, json_extract(s.mods,'$[1].LessIsGood') as l1,
---       json_extract(s.mods,'$[2].Label') as i2, json_extract(s.mods,'$[2].Value') as v2, json_extract(s.mods,'$[2].OriginalValue') as o2, json_extract(s.mods,'$[2].LessIsGood') as l2,
---       json_extract(s.mods,'$[3].Label') as i3, json_extract(s.mods,'$[3].Value') as v3, json_extract(s.mods,'$[3].OriginalValue') as o3, json_extract(s.mods,'$[3].LessIsGood') as l3,
---       json_extract(s.mods,'$[4].Label') as i4, json_extract(s.mods,'$[4].Value') as v4, json_extract(s.mods,'$[4].OriginalValue') as o4, json_extract(s.mods,'$[4].LessIsGood') as l4,
---       json_extract(s.mods,'$[5].Label') as i5, json_extract(s.mods,'$[5].Value') as v5, 
---          json_extract(s.mods,'$[5].OriginalValue') as o5, coalesce(json_extract(s.mods,'$[5].Value'),json_extract(s.mods,'$[5].ValueStr_Localised')) as l5,
---       json_extract(s.mods,'$[6].Label') as i6, coalesce(json_extract(s.mods,'$[6].Value'),json_extract(s.mods,'$[6].ValueStr_Localised')) as v6, 
---          json_extract(s.mods,'$[6].OriginalValue') as o6, json_extract(s.mods,'$[6].LessIsGood') as l6,
---       json_extract(s.mods,'$[7].Label') as i7, coalesce(json_extract(s.mods,'$[7].Value'),json_extract(s.mods,'$[7].ValueStr_Localised')) as v7, 
---          json_extract(s.mods,'$[7].OriginalValue') as o7, json_extract(s.mods,'$[7].LessIsGood') as l7,
-        json_array_length(s.mods) as mod_count
---       ,m.value
+       json_array_length(s.mods) as mod_count
   from slots s
  inner join v_slots_of_interest v on v.slot = s.slot
  inner join v_ship_list l on l.cmdr = s.cmdr and l.ship_id = s.ship_id
@@ -453,7 +439,6 @@ select cmdr, ship_id, shiptype, shipname, star,
                      or json_extract(item_jsa,'$.itemParts[' || usc || ']') = 'tiny' then 'Utility' 
               else 'Hardpoint' 
               end 
-      -- use item at end = tiny (array length) hpt_heatsinklauncher_turret_tiny hpt_plasmapointdefence_turret_tiny hpt_chafflauncher_tiny
          else 'Hull'
        end as slot_type,
        json_extract(item_jsa,'$.itemParts[0]') as it1,
@@ -472,49 +457,54 @@ select cmdr, ship_id, shiptype, shipname, star,
        mods, 
        mod_count 
   from item_split
- )
+ ),
+ pretty as (
  select cmdr,  ship_id,  shiptype,  shipname,  star,  
         slot_type,  
         slot,
---
-       case slot_type when 'Hull' then json_extract(item_jsa,'$.itemParts[' || (usc - 1) || ']') else lower(it2) end as item_group,
+       case slot_type when 'Hull' then json_extract(item_jsa,'$.itemParts[' || (usc - 1) || ']') else it2 end as item_group,
        case slot_type
-         --when 'Internal' then case when it2 in('dronecontrol') then it4 else it3 end
          when 'Hardpoint' then 
-               case when lower(it2) in('mining') then it3
-                    when lower(it2) in('guardian') then lower(it2) || '_' || lower(it3)
-                    else lower(it2) || coalesce('_' || lower(it5),'')
+               case when it2 in('mining') then it3
+                    when it2 in('guardian') then it2 || '_' || it3
+                    else it2 || coalesce('_' || it5,'')
                end
          when 'Hull' then replace(item, '_' || last_part,'')
---         when 'Internal' then it2 || '_' || it4
-         when 'Internal' then case when lower(it2) in('dronecontrol') then it2 || '_' || it5 else it2 || '_' || it4 end
-         else lower(it2) --|| '_' || coalesce(lower(it5),'')
+         when 'Internal' then case when it2 in('dronecontrol') then it2 || '_' || it5 else it2 || '_' || it4 end
+         else it2 --|| '_' || coalesce(lower(it5),'')
        end as "item",        
-        --lower(it2) || '_' || lower(it5) as item,
        case slot_type
-         when 'Internal' then case when lower(it2) in('dronecontrol') then it4 else it3 end
-         when 'Hardpoint' then case when lower(it2) in('mining','guardian') then it5 else it4 end
+         when 'Internal' then case when it2 in('dronecontrol') then it4 else it3 end
+         when 'Hardpoint' then case when it2 in('mining','guardian') then it5 else it4 end
          when 'Utility' then it3
          when 'Hull' then ''
          else it3
        end as "size",
        case slot_type
          when 'Internal' then case when it2 in('dronecontrol') then it5 else it4 end
-         when 'Hardpoint' then case when lower(it2) in('mining','guardian') then it4 else it3 end
+         when 'Hardpoint' then case when it2 in('mining','guardian') then it4 else it3 end
          when 'Utility' then it4
          when 'Hull' then last_part
          else it1
        end as "type", 
---
-       it1,  it2,  it3,  it4, it5,  
-        item as full_desc,  
-        item_jsa,  usc,  
+--     it1,  it2,  it3,  it4, it5,  
+--     item as full_desc,  
+--     item_jsa,  usc,  
         engineer,  blueprint,  exp_effect,  "level",  quality,  mods,  mod_count
    from decode
---  join json_each(j_slot,'$.Engineering.Modifiers') m
--- where i5 is not null and l5 is null
--- where item like 'hpt_crimescanner%'
- order by slot, cmdr, slot, item, json_array_length(mods) desc
+)
+select cmdr, ship_id, shiptype, shipname, star, slot_type, slot, item_group, item,
+       case "size"
+         when 'small' then '1 Small'
+         when 'medium' then '2 Medium'
+         when 'large' then '3 Large'
+         when 'Huge' then '4 Huge'
+         else "size"
+       end as "size",
+       "type", engineer, blueprint, exp_effect, "level", quality, mods, mod_count
+  from pretty
+ where quality = 1
+ order by cmdr, slot_type, item, size, level, quality
 ;
 
 select * from stg_loadout sl;

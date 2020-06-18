@@ -3,10 +3,11 @@
 import { promises as fs } from 'fs';
 
 import config from './config/config.mjs';
-import release from './version.mjs';
+// import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
 import createShipyard from './htmlgen/shipyard.mjs';
 import createStoredMods from './htmlgen/storedMods.mjs';
+import createShipMods from './htmlgen/shipMods.mjs';
 import createMaterials from './htmlgen/materials.mjs';
 
 async function main() {
@@ -15,6 +16,7 @@ async function main() {
   console.log('Creating results');
   await createShipyard(dao);
   await createStoredMods(dao);
+  await createShipMods(dao);
   await createMaterials(dao);
 }
 
