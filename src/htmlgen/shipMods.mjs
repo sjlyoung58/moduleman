@@ -19,24 +19,12 @@ from v_ship_modules
 async function createShipMods(dao) {
   console.time('shipmods.html written in');
 
-  // const cmdrRows = await dao.all(cmdrSql, []);
   const modRows = await dao.all(moduleSql, []);
 
   es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Ship Modules');
-
-    // let cmdr = 'none';
-    // cmdrRows.forEach(async (row) => {
-    //   // console.log('Curr=', cmdr, ', this=', row.cmdr);
-    //   const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
-    //   waitWrite(this, 'data', `${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
-    //   + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
-    //   cmdr = row.cmdr;
-    // });
-
     await waitWrite(this, 'data', '</p><h4 class="p-1">List of Modules on Ships</h4>\n');
     await waitWrite(this, 'data', '<table class="table table-striped">\n');
-    // , , , "level", quality, mods
     await waitWrite(this, 'data', '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Slot Type</th><th>Slot</th><th>Item Group</th><th>Item</th><th>Size</th><th>Type</th>'
           + '<th>Blueprint</th><th>Exp Effect</th><th>Level</th><th>Quality</th><th>Modifications</th></tr>\n');
 
