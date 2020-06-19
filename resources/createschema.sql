@@ -419,3 +419,52 @@ select cmdr, ship_id, shiptype, shipname, star, slot_type, slot, item_group, ite
   from pretty
  order by cmdr, slot_type, item, size, level, quality;
 
+create view v_fsdjump as
+with fsd as (
+select fsd.cmdr, 
+       date(fsd.jnltime) as jnldate, time(fsd.jnltime) as jnltime,
+       round(julianday('now') - fsd.jnltime) as days_old,
+       json_extract(jsondata,'$.StarSystem') as system,
+       json_extract(jsondata,'$.Powers[0]') as power,
+       json_extract(jsondata,'$.PowerplayState') as pp_state,
+       json_extract(value,'$.Name') as faction,
+       json_extract(jsondata,'$.SystemFaction.Name') = json_extract(value,'$.Name') as cf,
+       json_extract(value,'$.Influence') * 100 as influence,
+       json_extract(value,'$.FactionState') as faction_state,
+       --json_extract(value,'$.ActiveStates') as active,
+       case when json_extract(value,'$.ActiveStates') is not null then
+                  replace (json_array(json_extract(value,'$.ActiveStates[0].State'),
+                                      json_extract(value,'$.ActiveStates[1].State'),
+                                      json_extract(value,'$.ActiveStates[2].State')),',null','')
+            else ''
+        end as active,
+       case when json_extract(value,'$.PendingStates') is not null then
+                  replace (json_array(json_extract(value,'$.PendingStates[0].State'),
+                                      json_extract(value,'$.PendingStates[1].State'),
+                                      json_extract(value,'$.PendingStates[2].State')),',null','')
+            else ''
+        end as pending,
+       json_extract(value,'$.Happiness_Localised') as happiness,
+       json_extract(value,'$.Allegiance') as allegiance,
+       json_extract(value,'$.MyReputation') as my_reputation,
+       ech.value
+ from stg_fsdjump fsd, json_each(fsd.jsondata,'$.Factions') ech
+),
+latest as (
+select system, jnldate, max(jnltime) as jnltime, count(*)
+ from fsd
+ group by  system, jnldate
+)
+select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "system", 
+       ifnull(f.power,'') as power, ifnull(f.pp_state,'') as pp_state, 
+       ifnull(f.faction,'') as faction, ifnull(f.cf,'') as cf, 
+       ifnull(f.influence,'') as influence, 
+       ifnull(f.faction_state,'') as faction_state, 
+       replace(f.active,'"','') as active, replace(f.pending,'"','') as pending, 
+       ifnull(f.happiness,'') as happiness, 
+       ifnull(f.allegiance,'') as allegiance, 
+       ifnull(f.my_reputation,'') as my_reputation 
+  from fsd f
+ inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
+ order by  f.system, f.jnldate desc, f.influence desc;
+

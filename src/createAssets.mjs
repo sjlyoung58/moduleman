@@ -9,6 +9,7 @@ import createShipyard from './htmlgen/shipyard.mjs';
 import createStoredMods from './htmlgen/storedMods.mjs';
 import createShipMods from './htmlgen/shipMods.mjs';
 import createMaterials from './htmlgen/materials.mjs';
+import createFsdJump from './htmlgen/fsdJump.mjs';
 
 async function main() {
   const dao = await new AppDAO(config.db.path);
@@ -18,6 +19,7 @@ async function main() {
   await createStoredMods(dao);
   await createShipMods(dao);
   await createMaterials(dao);
+  await createFsdJump(dao);
 }
 
 main();

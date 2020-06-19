@@ -17,7 +17,7 @@ let dao;
 function processJournals() {
   console.log(`Fleet Manager version ${release}`);
   console.log(`Reading journals from ${config.jnl.path}`);
-  console.log('l = loadout found/processed, m = modules, s = shipyard, t = materials');
+  console.log('l = loadout found/processed, m = modules, s = shipyard, t = materials, f = fsdjump');
   fs.readdir(config.jnl.path, (err, files) => {
     if (err) {
       console.log('Error getting directory information.');
@@ -82,7 +82,7 @@ function processJournal(file) {
         process.stdout.write('l');
         break;
       case 'FSDJump':
-        if (daysOld < 5) {
+        if (daysOld < 14) {
           dao.upsertFSDJump([cmdr, ts, line]);
           process.stdout.write('f');
           // console.log('FSDJump ', daysOld);
