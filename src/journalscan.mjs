@@ -37,9 +37,8 @@ function processJournals() {
 }
 
 function daysDiff(timestamp1, timestamp2) {
-  var difference = timestamp1 - timestamp2;
-  var daysDifference = Math.floor(difference/1000/60/60/24);
-
+  const difference = timestamp1 - timestamp2;
+  const daysDifference = Math.floor(difference / 1000 / 60 / 60 / 24);
   return daysDifference;
 }
 
@@ -61,14 +60,17 @@ function processJournal(file) {
         break;
       case 'StoredModules':
         dao.upsertStMods([cmdr, ts, line]);
+        process.stdout.write('m');
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'Materials':
         dao.upsertMats([cmdr, ts, line]);
+        process.stdout.write('t');
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'StoredShips':
         dao.upsertStShips([cmdr, ts, line]);
+        process.stdout.write('s');
         // console.log(`${file} - ${cmdr} - ${new Date(entry.timestamp)} - ${entry.event}`);
         break;
       case 'Loadout':
@@ -77,13 +79,14 @@ function processJournal(file) {
         zship = URLSafeBase64.encode(zlib.gzipSync(buf));
         coriolis = `https://coriolis.io/import?data=${zship}`;
         dao.upsertLoadout([cmdr, entry.ShipID, ts, ship, coriolis]);
+        process.stdout.write('l');
         break;
       case 'FSDJump':
-        process.stdout.write('f');
-        // dao.upsertStShips([cmdr, ts, line]);
-          if (daysOld < 5) {
-            console.log('FSDJump ',daysOld);          
-          }
+        if (daysOld < 5) {
+          dao.upsertFSDJump([cmdr, ts, line]);
+          process.stdout.write('f');
+          // console.log('FSDJump ', daysOld);
+        }
         break;
       default:
         break;

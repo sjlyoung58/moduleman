@@ -5,16 +5,6 @@ class AppDAO {
   constructor(dbFilePath) {
     this.path = dbFilePath;
     this.db = undefined;
-    // this.db = this.open(dbFilePath);
-
-    // this.db = new sqlite3.Database(dbFilePath, sqlite3.OPEN_READWRITE, (err) => {
-    //   if (err) {
-    //     console.log('Could not connect to database', err);
-    //   } else {
-    //     console.log('Connected to database');
-    //     // this.initialise();
-    //   }
-    // });
   }
 
   async init() {
@@ -39,7 +29,6 @@ class AppDAO {
     WHERE excluded.jnltime > stg_st_ships.jnltime `;
 
     this.run(insStg, params);
-    process.stdout.write('s');
   }
 
   upsertLoadout(params) {
@@ -52,7 +41,6 @@ class AppDAO {
     `;
 
     this.run(insStg, params);
-    process.stdout.write('l');
   }
 
   upsertStMods(params) {
@@ -65,7 +53,6 @@ class AppDAO {
     `;
 
     this.run(insStg, params);
-    process.stdout.write('m');
   }
 
 
@@ -79,7 +66,16 @@ class AppDAO {
     `;
 
     this.run(insStg, params);
-    process.stdout.write('t');
+  }
+
+  upsertFSDJump(params) {
+    const insStg = `INSERT INTO stg_fsdjump
+    (cmdr, jnltime, jsondata)
+    VALUES(?, julianday(?), ?)
+    ON CONFLICT(cmdr, jnltime) DO NOTHING
+    `;
+
+    this.run(insStg, params);
   }
 
   insertStg(params) {

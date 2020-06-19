@@ -31,6 +31,12 @@ CREATE TABLE IF NOT EXISTS stg_mats (
     jsondata TEXT,
     CONSTRAINT st_mats_pk PRIMARY KEY (cmdr));
 
+CREATE TABLE IF NOT EXISTS stg_fsdjump (
+    cmdr TEXT,
+    jnltime REAL, 
+    jsondata TEXT,
+    CONSTRAINT st_ships_pk PRIMARY KEY (cmdr, jnltime));
+
 CREATE TABLE engineer (
 	engineer TEXT,
 	base TEXT,

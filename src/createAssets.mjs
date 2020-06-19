@@ -1,6 +1,6 @@
 /* eslint-disable import/extensions */
 /* eslint-disable no-console */
-import { promises as fs } from 'fs';
+// import { promises as fs } from 'fs';
 
 import config from './config/config.mjs';
 // import release from './version.mjs';

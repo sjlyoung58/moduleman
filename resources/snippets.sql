@@ -561,3 +561,32 @@ select cmdr, "type", name, qty from v_materials;
 
 SELECT distinct cmdr, jnltime FROM v_materials;
 
+--===================== FSDJump =====================--
+
+SELECT cmdr, jnltime, jsondata
+FROM stg_fsdjump;
+
+--create view v_fsdjump as
+with fsd as (
+select fsd.cmdr, 
+       date(fsd.jnltime) || ' ' || time(fsd.jnltime) as jnltime,
+       json_extract(jsondata,'$.StarSystem') as system,
+       json_extract(jsondata,'$.Powers[0]') as power,
+       json_extract(jsondata,'$.PowerplayState') as pp_state,
+       --
+       json_extract(value,'$.Name') as faction,
+       json_extract(jsondata,'$.SystemFaction.Name') = json_extract(value,'$.Name') as cf,
+       json_extract(value,'$.Influence') * 100 as influence,
+       json_extract(value,'$.FactionState') as faction_state,
+       json_extract(value,'$.ActiveStates') as active,
+       json_extract(value,'$.PendingStates') as pending,
+       json_extract(value,'$.Happiness_Localised') as happiness,
+       json_extract(value,'$.Allegiance') as allegiance,
+       json_extract(value,'$.MyReputation') as my_reputation,
+       ech.value
+ from stg_fsdjump fsd, json_each(fsd.jsondata,'$.Factions') ech
+)
+select *
+  from fsd
+ order by  system, fsd.jnltime, influence desc;
+

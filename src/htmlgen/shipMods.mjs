@@ -2,7 +2,9 @@
 /* eslint-disable no-console */
 import fs from 'fs';
 import es from 'event-stream';
+
 import release from '../version.mjs';
+import writeHeader from './header.mjs';
 
 // const cmdrSql = 'select * from v_cmdr_module_summary';
 
@@ -57,16 +59,6 @@ async function createShipMods(dao) {
 
 async function waitWrite(evStr, mode, line) {
   evStr.emit(mode, line);
-}
-
-async function writeHeader(evStr, mainTitle) {
-  evStr.emit('data', '<!DOCTYPE html><html lang="en">\n');
-  evStr.emit('data', '<head>\n', 'utf-8');
-  evStr.emit('data', '<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"'
-    + ' integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">\n'
-    + '<link rel="shortcut icon" href="../images/favicon.ico">\n');
-  evStr.emit('data', '</head><body><div translate="no" class="notranslate">\n');
-  evStr.emit('data', `<h4 class="p-1">${mainTitle}</h4><p>\n`);
 }
 
 export { createShipMods as default };
