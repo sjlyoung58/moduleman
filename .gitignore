@@ -12,6 +12,7 @@ public/*.html
 # public/stmods.html
 # public/test.html
 # public/mats.html
+public/extracts/*.csv
 
 src/config/config.mjs
 

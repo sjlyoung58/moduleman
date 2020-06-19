@@ -8,7 +8,7 @@ import writeHeader from './header.mjs';
 
 // const cmdrSql = 'select * from v_cmdr_module_summary';
 
-const fsdJumpSql = 'select * from v_fsdjump where days_old <= 5';
+const fsdJumpSql = 'select * from v_fsdjump where days_old <= 1';
 
 function pround(num, decimals) {
   const t = 10 ** decimals;
