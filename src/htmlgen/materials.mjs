@@ -8,13 +8,33 @@ import writeHeader from './header.mjs';
 
 const cmdrSql = 'SELECT distinct cmdr, jnltime FROM v_materials';
 
-const shipSql = 'select cmdr, "type", name, qty from v_materials';
+const materialSql = 'select cmdr, "type", name, qty from v_materials';
+
+// async function getCmdrMatTypeRow(cmdr, label, matRows, materials[]) {
+
+// }
+// async function writeCmdrRawMats(cmdr, matRows) {
+
+
+// }
+// async function writeCmdrMfMats(dao) {}
+// async function writeCmdrEncMats(dao) {}
+// async function writeCmdrMaterials(cmdr,dao) {
+//   writeCmdrRawMats();
+//   writeCmdrMfMats();
+//   writeCmdrEncMats();
+// }
 
 async function createMaterials(dao) {
   console.time('mats.html written in');
 
   const cmdrRows = await dao.all(cmdrSql, []);
-  const shipRows = await dao.all(shipSql, []);
+  const materialRows = await dao.all(materialSql, []);
+
+  const raws = materialRows.filter((row) => row.type === 'Raw' && row.cmdr === 'Zoy').map((raw) => ({ name: raw.name, qty: raw.qty }));
+  const oneval = raws.filter((raw) => raw.name === 'Arsenic').map((one) => one.qty);
+  console.debug(raws);
+  console.debug('Arsenic=', oneval[0] || 0);
 
   es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Status');
@@ -27,7 +47,7 @@ async function createMaterials(dao) {
     await waitWrite(this, 'data', '<table class="table table-striped">\n');
     await waitWrite(this, 'data', '<tr><th>CMDR</th><th>Type</th><th>Name</th><th>Qty</th></tr>\n');
 
-    shipRows.forEach(async (row) => {
+    materialRows.forEach(async (row) => {
       await waitWrite(this, 'data', '<tr>'
                             + `<td>${row.cmdr}</td>`
                             + `<td>${row.type}</td>`
