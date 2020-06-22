@@ -6,15 +6,28 @@ import es from 'event-stream';
 import release from '../version.mjs';
 import writeHeader from './header.mjs';
 
-async function getCmdrMatTypeRow(label, matRows, materials) {
-  return 'Hello';
+function getMatQty(material, matRows) {
+  const matQty = matRows.filter((grp) => material === grp.name).map((ite) => ite.qty);
+  return { name: material, qty: (matQty[0] || 0) };
 }
 
-async function writeCmdrRawMats(cmdr, mats) {
+function getCmdrMatTypeRow(label, matRows, materials) {
+  // const group = matRows.filter((grp) => materials.includes(grp.name)).map((ite) => ite.qty);
+  const group = materials.flatMap((mat) => getMatQty(mat, matRows));
+  return JSON.stringify({ cat: label, materials: group });
+}
+
+function writeCmdrRawMats(cmdr, mats) {
   const oneval = mats.filter((raw) => raw.name === 'Arsenic').map((one) => one.qty);
   // console.debug('Raw', cmdr, mats);
   console.debug(cmdr, 'Arsenic=', oneval[0] || 0);
-  console.debug(getCmdrMatTypeRow('Group 1',mats,['Carbon','Sulphur','Arsenic','Selenium']));
+  console.debug(getCmdrMatTypeRow('Category 1',mats,['Carbon','Vanadium','Niobium','Yttrium']));
+  console.debug(getCmdrMatTypeRow('Category 2',mats,['Phosphorus','Chromium','Molybdenum','Technetium']));
+  console.debug(getCmdrMatTypeRow('Category 3',mats,['Sulphur','Manganese','Cadmium','Ruthenium']));
+  console.debug(getCmdrMatTypeRow('Category 4',mats,['Iron','Zinc','Tin','Selenium']));
+  console.debug(getCmdrMatTypeRow('Category 5',mats,['Nickel','Germanium','Tungsten','Tellurium']));
+  console.debug(getCmdrMatTypeRow('Category 6',mats,['Rhenium','Arsenic','Mercury','Polonium']));
+  console.debug(getCmdrMatTypeRow('Category 7',mats,['Lead','Zirconium','Boron','Antimony']));
 }
 
 async function writeCmdrMfMats(cmdr, mats) {
