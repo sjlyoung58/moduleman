@@ -636,10 +636,24 @@ select system, jnldate, max(jnltime) as jnltime, count(*)
  from conf
  group by  system, jnldate
 )
-select * 
+select f.jnldate, 
+       --f.jnltime, 
+       f.days_old, 
+       f."system", 
+       json_extract(f.value,'$.WarType') as type,
+       json_extract(f.value,'$.Status') as status,
+       json_extract(f.value,'$.Faction1.WonDays') || '-' || json_extract(f.value,'$.Faction2.WonDays') as score,
+       json_extract(f.value,'$.Faction1.Name') as fac1,
+       json_extract(f.value,'$.Faction1.WonDays') as won1,
+       json_extract(f.value,'$.Faction1.Stake') as at_stake1,
+       --
+       json_extract(f.value,'$.Faction2.Name') as fac2,
+       json_extract(f.value,'$.Faction2.WonDays') as won2,
+       json_extract(f.value,'$.Faction2.Stake') as at_stake2
+       ,f.value
   from conf f
  inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
- order by system, jnldate
+ order by f.system, f.jnldate
 ;
 
 
