@@ -620,3 +620,26 @@ select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "syste
 select *
   from v_fsdjump;
 
+with conf as (
+ SELECT --fsd.cmdr, 
+       date(fsd.jnltime) as jnldate, time(fsd.jnltime) as jnltime,
+       round(julianday('now') - fsd.jnltime) as days_old,
+       json_extract(fsd.jsondata,'$.StarSystem') as system,
+       ech.value
+  FROM stg_fsdjump fsd,
+       json_tree(jsondata,'$.Conflicts') ech
+ WHERE json_extract(fsd.jsondata,'$.Conflicts') is not null
+   and ech.fullkey like '%conflicts[%]'
+),
+latest as (
+select system, jnldate, max(jnltime) as jnltime, count(*)
+ from conf
+ group by  system, jnldate
+)
+select * 
+  from conf f
+ inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
+ order by system, jnldate
+;
+
+
