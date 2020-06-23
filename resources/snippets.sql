@@ -635,7 +635,8 @@ latest as (
 select system, jnldate, max(jnltime) as jnltime, count(*)
  from conf
  group by  system, jnldate
-)
+),
+byday as (
 select f.jnldate, 
        --f.jnltime, 
        f.days_old, 
@@ -644,16 +645,17 @@ select f.jnldate,
        json_extract(f.value,'$.Status') as status,
        json_extract(f.value,'$.Faction1.WonDays') || '-' || json_extract(f.value,'$.Faction2.WonDays') as score,
        json_extract(f.value,'$.Faction1.Name') as fac1,
+       json_extract(f.value,'$.Faction2.Name') as fac2,
        json_extract(f.value,'$.Faction1.WonDays') as won1,
        json_extract(f.value,'$.Faction1.Stake') as at_stake1,
-       --
-       json_extract(f.value,'$.Faction2.Name') as fac2,
        json_extract(f.value,'$.Faction2.WonDays') as won2,
        json_extract(f.value,'$.Faction2.Stake') as at_stake2
-       ,f.value
+       --,f.value
   from conf f
  inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
- order by f.system, f.jnldate
+)
+select * from byday
+order by system, fac1, fac2, at_stake1, at_stake2, jnldate desc
 ;
 
 
