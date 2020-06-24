@@ -22,8 +22,8 @@ async function createFsdJump(dao) {
   const modRows = await dao.all(fsdJumpSql, []);
 
   es.readable(async function foo(count, next) {
-    await writeHeader(this, 'FSD Jump Analysis');
-    await waitWrite(this, 'data', '</p><h4 class="p-1">Recent FSD Jump History</h4>\n');
+    await writeHeader(this, 'Recent FSD Jump History');
+    // await waitWrite(this, 'data', '</p>');
     await waitWrite(this, 'data', '<table class="table table-striped">\n');
     await waitWrite(this, 'data', '<tr><th>Date</th><th>Time</th><th>System</th><th>Power</th>'
           + '<th>Power State</th><th>Faction</th><th>CF</th><th>Influence</th><th>State</th>'

@@ -24,8 +24,8 @@ async function createStoredMods(dao) {
     let cmdr = 'none';
     cmdrRows.forEach(async (row) => {
       // console.log('Curr=', cmdr, ', this=', row.cmdr);
-      const cmdrHddr = `</p><h5 class="p-1">${row.cmdr}</h5><p>`;
-      waitWrite(this, 'data', `${(row.cmdr !== cmdr) ? cmdrHddr : ''}&nbsp;CMDR ${row.cmdr} has `
+      const cmdrHddr = `<h5 class="p-1">${row.cmdr}</h5><p>`;
+      waitWrite(this, 'data', `${(row.cmdr !== cmdr) ? cmdrHddr : '<p>'}&nbsp;CMDR ${row.cmdr} has `
                     + `${row.modules} module${(row.modules > 1) ? 's' : ''} stored in ${row.location} ${row.engineer}<br>\n`);
       cmdr = row.cmdr;
     });

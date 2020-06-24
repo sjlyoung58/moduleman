@@ -620,6 +620,9 @@ select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "syste
 select *
   from v_fsdjump;
 
+drop view v_conflicts; 
+
+create view v_conflicts as
 with conf as (
  SELECT --fsd.cmdr, 
        date(fsd.jnltime) as jnldate, time(fsd.jnltime) as jnltime,
@@ -658,4 +661,5 @@ select * from byday
 order by system, fac1, fac2, at_stake1, at_stake2, jnldate desc
 ;
 
+select * from v_conflicts;
 

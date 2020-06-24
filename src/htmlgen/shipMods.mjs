@@ -25,7 +25,7 @@ async function createShipMods(dao) {
 
   es.readable(async function foo(count, next) {
     await writeHeader(this, 'CMDR Ship Modules');
-    await waitWrite(this, 'data', '</p><h4 class="p-1">List of Modules on Ships</h4>\n');
+    await waitWrite(this, 'data', '<h4 class="p-1">List of Modules on Ships</h4>\n');
     await waitWrite(this, 'data', '<table class="table table-striped">\n');
     await waitWrite(this, 'data', '<tr><th>CMDR</th><th>Ship Type</th><th>Ship Name</th><th>System</th><th>Slot Type</th><th>Slot</th><th>Item Group</th><th>Item</th><th>Size</th><th>Type</th>'
           + '<th>Blueprint</th><th>Exp Effect</th><th>Level</th><th>Quality</th><th>Modifications</th></tr>\n');

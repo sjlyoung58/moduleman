@@ -33,7 +33,7 @@ function writeCmdrRawMats(cmdr, mats) {
 async function writeCmdrMfMats(cmdr, mats) {
   const oneval = mats.filter((raw) => raw.name === 'Modified Consumer Firmware').map((one) => one.qty);
   // console.debug('m/f ', cmdr, mats);
-  console.debug(cmdr, 'Mod C F=', oneval[0] || 0);
+  console.debug(cmdr, 'Modified Consumer Firmware=', oneval[0] || 0);
 }
 
 async function writeCmdrEncMats(cmdr, mats) {
@@ -68,7 +68,7 @@ async function createMaterials(dao) {
     await cmdrRows.forEach(async (row) => {
       await writeCmdrMaterials(row.cmdr, materialRows.filter((mat) => mat.cmdr === row.cmdr)
         .map((mat) => ({ type: mat.type, name: mat.name, qty: mat.qty })));
-      await waitWrite(this, 'data', `CMDR ${row.cmdr} materials as at ${row.jnltime}<br>\n`);
+      await waitWrite(this, 'data', `<p>CMDR ${row.cmdr} materials as at ${row.jnltime}<br>\n`);
     });
 
     await waitWrite(this, 'data', '</p><h4 class="p-1">List of Materials</h4>\n');

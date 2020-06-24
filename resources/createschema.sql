@@ -468,3 +468,40 @@ select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "syste
  inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
  order by  f.system, f.jnldate desc, f.influence desc;
 
+create view v_conflicts as
+with conf as (
+ SELECT --fsd.cmdr, 
+       date(fsd.jnltime) as jnldate, time(fsd.jnltime) as jnltime,
+       round(julianday('now') - fsd.jnltime) as days_old,
+       json_extract(fsd.jsondata,'$.StarSystem') as system,
+       ech.value
+  FROM stg_fsdjump fsd,
+       json_tree(jsondata,'$.Conflicts') ech
+ WHERE json_extract(fsd.jsondata,'$.Conflicts') is not null
+   and ech.fullkey like '%conflicts[%]'
+),
+latest as (
+select system, jnldate, max(jnltime) as jnltime, count(*)
+ from conf
+ group by  system, jnldate
+),
+byday as (
+select f.jnldate, 
+       --f.jnltime, 
+       f.days_old, 
+       f."system", 
+       json_extract(f.value,'$.WarType') as type,
+       json_extract(f.value,'$.Status') as status,
+       json_extract(f.value,'$.Faction1.WonDays') || '-' || json_extract(f.value,'$.Faction2.WonDays') as score,
+       json_extract(f.value,'$.Faction1.Name') as fac1,
+       json_extract(f.value,'$.Faction2.Name') as fac2,
+       json_extract(f.value,'$.Faction1.WonDays') as won1,
+       json_extract(f.value,'$.Faction1.Stake') as at_stake1,
+       json_extract(f.value,'$.Faction2.WonDays') as won2,
+       json_extract(f.value,'$.Faction2.Stake') as at_stake2
+       --,f.value
+  from conf f
+ inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
+)
+select * from byday
+order by system, fac1, fac2, at_stake1, at_stake2, jnldate desc;

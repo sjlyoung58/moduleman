@@ -82,7 +82,7 @@ function processJournal(file) {
         process.stdout.write('l');
         break;
       case 'FSDJump':
-        if (daysOld < 14) {
+        if (daysOld < 30) {
           dao.upsertFSDJump([cmdr, ts, line]);
           process.stdout.write('f');
           // console.log('FSDJump ', daysOld);

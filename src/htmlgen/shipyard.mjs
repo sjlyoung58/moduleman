@@ -22,7 +22,7 @@ async function createShipyard(dao) {
     await writeHeader(this, 'CMDR Status');
 
     await cmdrRows.forEach(async (row) => {
-      await waitWrite(this, 'data', `CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
+      await waitWrite(this, 'data', `<p>CMDR ${row.cmdr} last visited ${row.star}/${row.station} shipyard  ${row.days_old} days ago<br>\n`);
     });
 
     await waitWrite(this, 'data', '</p><h4 class="p-1">List of Ships</h4>\n');
