@@ -509,11 +509,17 @@ order by system, fac1, fac2, at_stake1, at_stake2, jnldate desc;
 create view v_latest_fsd as
 -- view to return latest FSDJump message processed to facilitate incremental journal scan
 with latest as (
-select ifnull(max(json_extract(jsondata,'$.timestamp')),'2018-02-27T11:59:59Z') as fsd 
+select ifnull(max(json_extract(jsondata,'$.timestamp')),'2018-02-28T11:59:59Z') as fsd 
   from stg_fsdjump
-)
+),
+dbefore as (
 select fsd as latest_fsd,
-       case when fsd = '2018-02-27T11:59:59Z' then 'Full' else 'Incremental' end as scan_type,
-       substr(fsd,3,2) || substr(fsd,6,2) || substr(fsd,9,2) ||
-       substr(fsd,12,2) || substr(fsd,15,2) || substr(fsd,18,2) as jnl_from
-  from latest;
+       -- subtract 1 to account for timestamp in UTC but journal name in local time
+       datetime(julianday(datetime(fsd)) -1) as process_from,
+       case when fsd = '2018-02-28T11:59:59Z' then 'Full' else 'Incremental' end as scan_type
+  from latest
+)
+select latest_fsd, scan_type,
+       substr(process_from,3,2) || substr(process_from,6,2) || substr(process_from,9,2) ||
+       substr(process_from,12,2) || substr(process_from,15,2) || substr(process_from,18,2) as jnl_from
+ from dbefore;
