@@ -29,6 +29,7 @@ SELECT 'jnl' as tab, count(*) FROM stg_jnl union
 SELECT 'loadout' as tab, count(*) FROM stg_loadout union
 SELECT 'mods' as tab, count(*) FROM stg_st_mods union 
 SELECT 'mats' as tab, count(*) FROM stg_mats union 
+SELECT 'fsdjump' as tab, count(*) FROM stg_fsdjump union 
 SELECT 'ships' as tab, count(*) FROM stg_st_ships;
 
 delete from stg_jnl;
@@ -663,3 +664,20 @@ order by system, fac1, fac2, at_stake1, at_stake2, jnldate desc
 
 select * from v_conflicts;
 
+select * from stg_fsdjump;
+
+drop view v_latest_fsd;
+
+create view v_latest_fsd as
+-- view to return latest FSDJump message processed to facilitate incremental journal scan
+with latest as (
+select ifnull(max(json_extract(jsondata,'$.timestamp')),'2018-02-27T11:59:59Z') as fsd 
+  from stg_fsdjump
+)
+select fsd as latest_fsd,
+       case when fsd = '2018-02-27T11:59:59Z' then 'Full' else 'Incremental' end as scan_type,
+       substr(fsd,3,2) || substr(fsd,6,2) || substr(fsd,9,2) ||
+       substr(fsd,12,2) || substr(fsd,15,2) || substr(fsd,18,2) as jnl_from
+  from latest;
+
+select * from v_latest_fsd;

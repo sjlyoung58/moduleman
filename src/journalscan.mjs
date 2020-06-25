@@ -14,9 +14,9 @@ import AppDAO from './db/dao.mjs';
 
 let dao;
 
-function processJournals() {
+function processJournals(startFrom) {
   console.log(`Fleet Manager version ${release}`);
-  console.log(`Reading journals from ${config.jnl.path}`);
+  console.log(`Reading journals from ${config.jnl.path} starting at ${startFrom}`);
   console.log('l = loadout found/processed, m = modules, s = shipyard, t = materials, f = fsdjump');
   fs.readdir(config.jnl.path, (err, files) => {
     if (err) {
@@ -26,7 +26,7 @@ function processJournals() {
         const nameParts = file.split('.');
         // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
         // only process Journal, not JournalBeta
-        if (nameParts[0] === 'Journal' && nameParts[1] > '180227119999') {
+        if (nameParts[0] === 'Journal' && nameParts[1] > startFrom) {
           processJournal(`${config.jnl.path}${file}`);
         } else {
           // console.log(`${file} rejected`);
@@ -110,8 +110,10 @@ function parseJSON(json, jnlfile) {
 async function main() {
   dao = new AppDAO(config.db.path);
   await dao.init();
-  await dao.dbSetup();
-  processJournals();
+  const latestFsd = await dao.all('select * from v_latest_fsd', []);
+  console.log(`Latest FSDJump processed from ${latestFsd[0].latest_fsd}, scan type ${latestFsd[0].scan_type}`
+           + `, processing journals > ${latestFsd[0].jnl_from}`);
+  processJournals(latestFsd[0].jnl_from);
 }
 
 main();

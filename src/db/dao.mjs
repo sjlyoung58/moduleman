@@ -8,17 +8,17 @@ class AppDAO {
   }
 
   async init() {
-    console.log('Opening database at ', this.path);
+    // console.log('Opening database at ', this.path);
     this.db = await this.open(this.path);
     console.log('Database opened ', this.db);
   }
 
-  async dbSetup() {
-    await this.run2('DELETE FROM stg_jnl');
-    await this.run2('DELETE FROM stg_loadout');
-    await this.run2('DELETE FROM stg_st_mods');
-    await this.run2('DELETE FROM stg_st_ships');
-  }
+  // async dbSetup() {
+  //   await this.run2('DELETE FROM stg_jnl');
+  //   await this.run2('DELETE FROM stg_loadout');
+  //   await this.run2('DELETE FROM stg_st_mods');
+  //   await this.run2('DELETE FROM stg_st_ships');
+  // }
 
   upsertStShips(params) {
     const insStg = `INSERT INTO stg_st_ships

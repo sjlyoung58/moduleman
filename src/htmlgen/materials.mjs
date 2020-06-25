@@ -66,8 +66,8 @@ async function createMaterials(dao) {
     await writeHeader(this, 'CMDR Status');
 
     await cmdrRows.forEach(async (row) => {
-      await writeCmdrMaterials(row.cmdr, materialRows.filter((mat) => mat.cmdr === row.cmdr)
-        .map((mat) => ({ type: mat.type, name: mat.name, qty: mat.qty })));
+      // await writeCmdrMaterials(row.cmdr, materialRows.filter((mat) => mat.cmdr === row.cmdr)
+      //   .map((mat) => ({ type: mat.type, name: mat.name, qty: mat.qty })));
       await waitWrite(this, 'data', `<p>CMDR ${row.cmdr} materials as at ${row.jnltime}<br>\n`);
     });
 
