@@ -27,3 +27,14 @@ select * from v_conflicts where days_old <= $DAYS2;
 .quit
 EOF
 echo `<./public/extracts/conflicts.csv wc -l` lines of data extracted
+
+echo extracting 15 days of FSDJumps to ./public/extracts/Journal.991231999999.FSDJump.log
+./resources/sqlite3 ./db/journal.sqlite3 <<EOF
+.headers off
+.output ./public/extracts/Journal.991231999999.FSDJump.log
+select jsondata 
+  from stg_fsdjump
+ where round(julianday('now') - jnltime) <= 30;
+.quit
+EOF
+echo `<./public/extracts/Journal.991231999999.FSDJump.log wc -l` lines of data extracted
