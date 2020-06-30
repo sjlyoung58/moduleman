@@ -28,7 +28,7 @@ select * from v_conflicts where days_old <= $DAYS2;
 EOF
 echo `<./public/extracts/conflicts.csv wc -l` lines of data extracted
 
-echo extracting 15 days of FSDJumps to ./public/extracts/Journal.991231999999.FSDJump.log
+echo extracting 30 days of FSDJumps to ./public/extracts/Journal.991231999999.FSDJump.log
 ./resources/sqlite3 ./db/journal.sqlite3 <<EOF
 .headers off
 .output ./public/extracts/Journal.991231999999.FSDJump.log
