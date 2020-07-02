@@ -669,6 +669,10 @@ select * from v_conflicts
 
 select '2020-06-29' as d, JULIANDAY('2020-06-29') as jd, JULIANDAY('2020-06-29') -10 as jd2, date(JULIANDAY('2020-06-29') -10) as d2; 
 
+select date('now'), date(JULIANDAY('now') -10) as d2;
+
+select min(1,2,3,null,4,-1,5);
+
 with curr as (
 select system, type, fac1, fac2, at_stake1, at_stake2, max(jnldate) as max_date, min(jnldate) as min_date, count(*) as kount
   from v_conflicts
@@ -690,9 +694,24 @@ select c.*,
  inner join v_conflicts v on c.system = v."system" and c.type = v."type" 
                          and c.fac1 = v.fac1 and c.fac2 = v.fac2 and c.at_stake1 = v.at_stake1 and c.at_stake2 = v.at_stake2 
                          and v.jnldate >= date(JULIANDAY(c.max_date) -10)
+),
+onel as (
+select "system",  "type",  fac1,  fac2,  at_stake1,  at_stake2,  
+       max_date,  min_date,  jnldate,    
+       max(pending_date) as mr_pend,  max(active_date) as mr_active,  
+       max(blank_date) as mr_blank, min(blank_date) as lr_blank, max(score) as score
+  from conf2
+ group by "system",  "type",  fac1,  fac2,  at_stake1,  at_stake2,  
+       max_date, min_date
 )
-select *
-  from conf2;
+select "system",  "type",  fac1,  fac2,  at_stake1,  at_stake2,
+       coalesce(mr_pend, case when lr_blank > jnldate then jnldate else lr_blank end, min_date) as start_date,
+       julianday(coalesce(mr_active, max_date)) - julianday(coalesce(mr_pend, case when lr_blank > jnldate then jnldate else lr_blank end, min_date)) as day,
+       score
+       ,max_date, min_date, jnldate, mr_pend, mr_active, mr_blank, lr_blank
+  from onel
+ where min_date >= date(JULIANDAY('now') -10)
+;
 
 --==================== work out latest FSDJump message processed ===============--
 select * from stg_fsdjump;
