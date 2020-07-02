@@ -664,6 +664,37 @@ order by system, fac1, fac2, at_stake1, at_stake2, jnldate desc
 
 select * from v_conflicts;
 
+select * from v_conflicts
+ where system = 'LHS 3739';
+
+select '2020-06-29' as d, JULIANDAY('2020-06-29') as jd, JULIANDAY('2020-06-29') -10 as jd2, date(JULIANDAY('2020-06-29') -10) as d2; 
+
+with curr as (
+select system, type, fac1, fac2, at_stake1, at_stake2, max(jnldate) as max_date, min(jnldate) as min_date, count(*) as kount
+  from v_conflicts
+ where days_old
+ group by system, type, fac1, fac2, at_stake1, at_stake2
+),
+conf2 as (
+select c.*, 
+       v.status, 
+       v.jnldate, 
+       v.score, 
+       v.won1, 
+       v.won2, 
+       v.won1 + v.won2 as not_drawn,
+       case v.status when 'pending' then jnldate else null end as pending_date,
+       case v.status when 'active' then jnldate else null end as active_date,
+       case v.status when '' then jnldate else null end as blank_date
+  from curr c
+ inner join v_conflicts v on c.system = v."system" and c.type = v."type" 
+                         and c.fac1 = v.fac1 and c.fac2 = v.fac2 and c.at_stake1 = v.at_stake1 and c.at_stake2 = v.at_stake2 
+                         and v.jnldate >= date(JULIANDAY(c.max_date) -10)
+)
+select *
+  from conf2;
+
+--==================== work out latest FSDJump message processed ===============--
 select * from stg_fsdjump;
 
 SELECT datetime('2018-02-27T11:59:59Z') as dtm,
@@ -690,3 +721,18 @@ select latest_fsd, scan_type,
  from dbefore;
 
 select * from v_latest_fsd;
+
+--========================================================--
+
+select *
+  from stg_fsdjump
+ where round(julianday('now') - jnltime) <= 15;us
+
+select jsondata 
+  from stg_fsdjump
+ where round(julianday('now') - jnltime) <= 15;
+
+select cmdr
+  from stg_fsdjump
+ where cmdr <> 'none'
+group by cmdr order by count(*) desc limit 1;
