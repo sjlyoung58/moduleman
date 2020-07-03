@@ -618,8 +618,13 @@ select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "syste
  inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
  order by  f.system, f.jnldate desc, f.influence desc;
 
-select *
-  from v_fsdjump;
+select jnldate,  days_old,  "system",  power,  pp_state,  
+       faction,  cf,  influence,  faction_state,  active,  pending,  
+       happiness,  allegiance,  my_reputation
+  from v_fsdjump
+ order by jnldate desc, system, influence desc, faction;
+ 
+select * from v_fsdjump where days_old <= 1;
 
 drop view v_conflicts; 
 
