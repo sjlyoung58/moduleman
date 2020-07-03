@@ -13,6 +13,7 @@ public/*.html
 # public/test.html
 # public/mats.html
 public/extracts/*.csv
+public/extracts/*.txt
 
 src/config/config.mjs
 

@@ -41,3 +41,22 @@ select jsondata
 .quit
 EOF
 echo `<$EXJNL wc -l` lines of data extracted
+
+echo extracting current conflict summary csv to ./public/extracts/conf_summ.csv
+./resources/sqlite3 ./db/journal.sqlite3 <<EOF
+.headers on
+.mode csv
+.output ./public/extracts/conf_summ.csv
+select * from v_conflict_summary;
+.quit
+EOF
+echo `<./public/extracts/conf_summ.csv wc -l` lines of data extracted
+
+echo extracting formatted conflict summary to ./public/extracts/conf_summ.txt
+./resources/sqlite3 ./db/journal.sqlite3 <<EOF
+.headers off
+.output ./public/extracts/conf_summ.txt
+select * from v_conflict_pretty;
+.quit
+EOF
+echo `<./public/extracts/conf_summ.txt wc -l` lines of data extracted

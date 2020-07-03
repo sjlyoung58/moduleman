@@ -523,3 +523,70 @@ select latest_fsd, scan_type,
        substr(process_from,3,2) || substr(process_from,6,2) || substr(process_from,9,2) ||
        substr(process_from,12,2) || substr(process_from,15,2) || substr(process_from,18,2) as jnl_from
  from dbefore;
+
+create view v_conflict_summary as 
+with curr as (
+select system, type, fac1, fac2, at_stake1, at_stake2, max(jnldate) as max_date, 
+       count(*) as kount
+  from v_conflicts
+ group by system, type, fac1, fac2, at_stake1, at_stake2
+),
+conf2 as (
+select c.*, 
+       v.status, 
+       v.jnldate, 
+       v.score, 
+       v.won1, 
+       v.won2, 
+       case v.status when 'pending' then jnldate else null end as pending_date,
+       case v.status when 'active' then jnldate else null end as active_date,
+       case v.status when '' then jnldate else null end as blank_date
+  from curr c
+ inner join v_conflicts v on c.system = v."system" and c.type = v."type" 
+                         and c.fac1 = v.fac1 and c.fac2 = v.fac2 and c.at_stake1 = v.at_stake1 and c.at_stake2 = v.at_stake2 
+                         and v.jnldate >= date(JULIANDAY(c.max_date) -10)
+),
+onel as (
+select "system",  "type",  fac1,  fac2,  at_stake1,  at_stake2,  
+       max_date,  
+       jnldate,    
+       max(pending_date) as mr_pend,  
+       max(active_date) as mr_active,  
+       min(active_date) as lr_active,  
+       max(blank_date) as mr_blank, 
+       min(blank_date) as lr_blank, 
+       max(score) as score,
+       max(won1) + max(won2) as min_days
+  from conf2
+ group by "system",  "type",  fac1,  fac2,  at_stake1,  at_stake2,  
+       max_date
+),
+final as (
+select "system",  "type",  fac1,  fac2,  at_stake1,  at_stake2,
+       min(jnldate, ifnull(mr_pend, max_date), ifnull(lr_active, max_date), ifnull(lr_blank, max_date), date(JULIANDAY(max_date) - (min_days + 1))) as lowest_date,
+       coalesce(mr_pend, case when lr_blank > jnldate then jnldate else lr_blank end, lr_active) as start_date,
+       score, min_days
+       ,max_date, jnldate, mr_pend, mr_active, lr_active, mr_blank, lr_blank
+  from onel
+ where max_date >= date(JULIANDAY('now') -10)
+)
+select c."system", c."type", 
+       round(f.influence,2) as inf, 
+       c.fac1, c.fac2, 
+       c.at_stake1, c.at_stake2, 
+       c.lowest_date as min_date, 
+       c.max_date,
+       julianday(coalesce(mr_active, max_date)) - julianday(lowest_date) as est_day, 
+       c.score
+--     , min_days, jnldate, mr_pend, mr_active, lr_active, mr_blank, lr_blank
+  from final c
+ left outer join v_fsdjump f on c.system = f."system" and c.fac1 = f.faction and f.jnldate = c.max_date;
+
+create view v_conflict_pretty as
+SELECT system || ': ' || fac1 || 
+       case type when 'election' then ' are in an ' else ' are in a ' end || 
+       case type when 'civilwar' then 'civil war' else type end  || 
+       ' with ' ||  fac2 || ', Status: Day ' || printf('%d', est_day) || ', score ' || score ||
+       ', at risk ' || case at_stake1 when '' then 'nothing' else at_stake1 end || '/' ||
+       case at_stake2 when '' then 'nothing' else at_stake2 end as description
+  FROM v_conflict_summary;
