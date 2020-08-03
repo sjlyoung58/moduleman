@@ -85,10 +85,6 @@ function processJournal(file) {
         process.stdout.write('l');
         break;
       case 'CarrierStats':
-        ship = JSON.stringify(entry);
-        buf = Buffer.from(ship, 'utf-8');
-        zship = URLSafeBase64.encode(zlib.gzipSync(buf));
-        coriolis = `https://coriolis.io/import?data=${zship}`;
         dao.upsertCarrierStats([cmdr, ts, line]);
         process.stdout.write('c');
         // console.log('CarrierStats ', daysOld);

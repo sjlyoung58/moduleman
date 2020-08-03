@@ -501,10 +501,13 @@ select json_extract(jsondata,'$.SystemAddress') as id,
        json_extract(jsondata,'$.SystemSecurity_Localised') as security,
        json_extract(jsondata,'$.Population') as population,
        json_extract(jsondata,'$.SystemFaction.Name') as cmf,
+       json_group_array(json_extract(ech.value,'$.Name')) as factions,
        json_extract(jsondata,'$.SystemFaction.FactionState') as state,
        json_extract(jsondata,'$.Powers[0]') as power,
-       json_extract(jsondata,'$.PowerplayState') as pp_state
- from fsd;
+       json_extract(jsondata,'$.PowerplayState') as pp_state,
+       jnltime
+ from fsd, json_each(fsd.jsondata,'$.Factions') ech
+group by json_extract(jsondata,'$.SystemAddress');
 
 create view v_conflicts as
 with conf as (

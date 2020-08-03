@@ -787,6 +787,8 @@ select * from v_latest_fsd;
 --========================================================--
 --========== Megaships ===================================--
 
+drop view v_system;
+
 create view v_system as
 with latest as (
 select json_extract(jsondata,'$.StarSystem') as system, max(jnltime) as jnltime
@@ -808,10 +810,13 @@ select json_extract(jsondata,'$.SystemAddress') as id,
        json_extract(jsondata,'$.SystemSecurity_Localised') as security,
        json_extract(jsondata,'$.Population') as population,
        json_extract(jsondata,'$.SystemFaction.Name') as cmf,
+       json_group_array(json_extract(ech.value,'$.Name')) as factions,
        json_extract(jsondata,'$.SystemFaction.FactionState') as state,
        json_extract(jsondata,'$.Powers[0]') as power,
-       json_extract(jsondata,'$.PowerplayState') as pp_state
- from fsd;
+       json_extract(jsondata,'$.PowerplayState') as pp_state,
+       jnltime
+ from fsd, json_each(fsd.jsondata,'$.Factions') ech
+group by json_extract(jsondata,'$.SystemAddress');
 
 select * from v_system;
 
@@ -819,15 +824,36 @@ select count(*) from v_system;
 
 with mega as (
 SELECT date(sig.jnltime) as jnldate, time(sig.jnltime) as jnltime,
-       sys.system,
+--       sys.system,
        json_extract(sig.jsondata,'$.SignalName') as megaship,
        json_extract(sig.jsondata,'$.SystemAddress') as system_id,
        sig.jnltime as ts 
   FROM stg_fsssignal sig
- inner join v_system sys on sys.id = json_extract(sig.jsondata,'$.SystemAddress')
-)
-select distinct  megaship, "system", jnldate
+),
+grp as (
+select megaship, system_id, max(jnldate) as last_seen, min(jnldate) as first_seen
   from mega
- order by megaship, jnldate desc;
+ group by megaship, system_id
+)
+select distinct  m.megaship, 
+       s."system",
+       m.first_seen, m.last_seen, 
+       s.cmf, 
+       s.state,
+       s.factions as system_factions,
+       round(julianday('now') - s.jnltime) as days_old
+--       ,s.jnltime
+  from grp m
+ inner join v_system s on s.id = m.system_id
+ where round(julianday('now') - s.jnltime) < 7
+ order by megaship, last_seen desc;
 
+select jsondata 
+  from stg_fsdjump
+ where round(julianday('now') - jnltime) <= 60
+UNION 
+select jsondata 
+  from stg_fsssignal sf 
+ where round(julianday('now') - jnltime) <= 60
+;
 
