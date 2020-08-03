@@ -31,13 +31,17 @@ echo `<./public/extracts/conflicts.csv wc -l` lines of data extracted
 CMDR=`./scripts/getMainCmdr.sh`_`date +%a`
 EXJNL=./public/extracts/TourData.991231999999.$CMDR.log
 
-echo extracting 30 days of FSDJumps to $EXJNL
+echo extracting 60 days of Tour Data to $EXJNL
 ./resources/sqlite3 ./db/journal.sqlite3 <<EOF
 .headers off
 .output $EXJNL
 select jsondata 
   from stg_fsdjump
- where round(julianday('now') - jnltime) <= 30;
+ where round(julianday('now') - jnltime) <= 60
+UNION 
+select jsondata 
+  from stg_fsssignal sf 
+ where round(julianday('now') - jnltime) <= 60;
 .quit
 EOF
 echo `<$EXJNL wc -l` lines of data extracted
