@@ -29,7 +29,7 @@ EOF
 echo `<./public/extracts/conflicts.csv wc -l` lines of data extracted
 
 CMDR=`./scripts/getMainCmdr.sh`_`date +%a`
-EXJNL=./public/extracts/Journal.991231999999.$CMDR.log
+EXJNL=./public/extracts/TourData.991231999999.$CMDR.log
 
 echo extracting 30 days of FSDJumps to $EXJNL
 ./resources/sqlite3 ./db/journal.sqlite3 <<EOF

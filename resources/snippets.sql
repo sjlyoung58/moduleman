@@ -618,12 +618,16 @@ select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "syste
  inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
  order by  f.system, f.jnldate desc, f.influence desc;
 
-select jnldate,  days_old,  "system",  power,  pp_state,  
+select RANK() OVER (
+--	   PARTITION BY jnldate, system
+ order by jnldate desc--, system, influence desc, faction
+) as rnk,
+       jnldate,  days_old,  "system",  power,  pp_state,  
        faction,  cf,  influence,  faction_state,  active,  pending,  
        happiness,  allegiance,  my_reputation
   from v_fsdjump
- order by jnldate desc, system, influence desc, faction;
- 
+;
+
 select * from v_fsdjump where days_old <= 1;
 
 drop view v_conflicts; 
@@ -781,16 +785,49 @@ select latest_fsd, scan_type,
 select * from v_latest_fsd;
 
 --========================================================--
+--========== Megaships ===================================--
 
-select *
-  from stg_fsdjump
- where round(julianday('now') - jnltime) <= 15;us
+create view v_system as
+with latest as (
+select json_extract(jsondata,'$.StarSystem') as system, max(jnltime) as jnltime
+ from stg_fsdjump fsd
+group by json_extract(jsondata,'$.StarSystem')
+),
+fsd as (
+select f.jnltime, f.jsondata
+  FROM stg_fsdjump f
+ inner join latest l on l.system = json_extract(f.jsondata,'$.StarSystem')
+                    and l.jnltime = f.jnltime
+)
+select json_extract(jsondata,'$.SystemAddress') as id,
+       json_extract(jsondata,'$.StarSystem') as system,
+       json_extract(jsondata,'$.StarPos') as xyz,
+       json_extract(jsondata,'$.SystemAllegiance') as allegiance,
+       json_extract(jsondata,'$.SystemEconomy_Localised') as economy,
+       json_extract(jsondata,'$.SystemGovernment_Localised') as government,
+       json_extract(jsondata,'$.SystemSecurity_Localised') as security,
+       json_extract(jsondata,'$.Population') as population,
+       json_extract(jsondata,'$.SystemFaction.Name') as cmf,
+       json_extract(jsondata,'$.SystemFaction.FactionState') as state,
+       json_extract(jsondata,'$.Powers[0]') as power,
+       json_extract(jsondata,'$.PowerplayState') as pp_state
+ from fsd;
 
-select jsondata 
-  from stg_fsdjump
- where round(julianday('now') - jnltime) <= 15;
+select * from v_system;
 
-select cmdr
-  from stg_fsdjump
- where cmdr <> 'none'
-group by cmdr order by count(*) desc limit 1;
+select count(*) from v_system;
+
+with mega as (
+SELECT date(sig.jnltime) as jnldate, time(sig.jnltime) as jnltime,
+       sys.system,
+       json_extract(sig.jsondata,'$.SignalName') as megaship,
+       json_extract(sig.jsondata,'$.SystemAddress') as system_id,
+       sig.jnltime as ts 
+  FROM stg_fsssignal sig
+ inner join v_system sys on sys.id = json_extract(sig.jsondata,'$.SystemAddress')
+)
+select distinct  megaship, "system", jnldate
+  from mega
+ order by megaship, jnldate desc;
+
+

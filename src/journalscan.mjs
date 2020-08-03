@@ -2,22 +2,19 @@
 /* eslint-disable no-console */
 import fs from 'fs';
 import lineReader from 'line-reader';
-// import path from 'path';
-// import datetime from 'node-datetime';
 import zlib from 'zlib';
 import URLSafeBase64 from 'urlsafe-base64';
 
 import config from './config/config.mjs';
 import release from './version.mjs';
 import AppDAO from './db/dao.mjs';
-// import AppDAO from './db/dao-as.mjs';
 
 let dao;
 
 function processJournals(startFrom) {
   console.log(`Fleet Manager version ${release}`);
   console.log(`Reading journals from ${config.jnl.path} starting at ${startFrom}`);
-  console.log('l = loadout found/processed, m = modules, s = shipyard, t = materials, f = fsdjump');
+  console.log('l = Loadout, m = Modules, s = Shipyard, t = Materials, f = FSDJump, S = FSSSignal, c = CarrierStats');
   fs.readdir(config.jnl.path, (err, files) => {
     if (err) {
       console.log('Error getting directory information.');
@@ -26,7 +23,7 @@ function processJournals(startFrom) {
         const nameParts = file.split('.');
         // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
         // only process Journal, not JournalBeta
-        if (nameParts[0] === 'Journal' && nameParts[1] > startFrom) {
+        if (['Journal', 'TourData'].includes(nameParts[0]) && nameParts[1] > startFrom) {
           processJournal(`${config.jnl.path}${file}`);
         } else {
           // console.log(`${file} rejected`);
@@ -43,6 +40,12 @@ function daysDiff(timestamp1, timestamp2) {
 }
 
 function processJournal(file) {
+  const short = file.replace(config.jnl.path, '');
+  // console.log(`processing ${short.split('.')}`);
+  if (short.split('.')[0] === 'TourData') {
+    console.log(`Processing imported TourData from ${short.split('.')[2]}`);
+  }
+
   let cmdr = 'none';
   lineReader.eachLine(file, (line) => {
     const entry = parseJSON(line, file);
@@ -81,11 +84,26 @@ function processJournal(file) {
         dao.upsertLoadout([cmdr, entry.ShipID, ts, ship, coriolis]);
         process.stdout.write('l');
         break;
+      case 'CarrierStats':
+        ship = JSON.stringify(entry);
+        buf = Buffer.from(ship, 'utf-8');
+        zship = URLSafeBase64.encode(zlib.gzipSync(buf));
+        coriolis = `https://coriolis.io/import?data=${zship}`;
+        dao.upsertCarrierStats([cmdr, ts, line]);
+        process.stdout.write('c');
+        // console.log('CarrierStats ', daysOld);
+        break;
       case 'FSDJump':
-        if (daysOld < 30) {
+        if (daysOld < 60) {
           dao.upsertFSDJump([cmdr, ts, line]);
           process.stdout.write('f');
-          // console.log('FSDJump ', daysOld);
+        }
+        break;
+      case 'FSSSignalDiscovered':
+        if ((daysOld < 60) && (JSON.stringify(entry.SignalName).includes('-class'))) {
+          dao.upsertFSSSignalDiscovered([cmdr, ts, line]);
+          process.stdout.write('S');
+          // console.log('FSSSignalDiscovered ', daysOld);
         }
         break;
       default:

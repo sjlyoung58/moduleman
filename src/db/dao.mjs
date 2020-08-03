@@ -78,6 +78,28 @@ class AppDAO {
     this.run(insStg, params);
   }
 
+  upsertFSSSignalDiscovered(params) {
+    const insStg = `INSERT INTO stg_fsssignal
+    (cmdr, jnltime, jsondata)
+    VALUES(?, julianday(?), ?)
+    ON CONFLICT(cmdr, jnltime) DO NOTHING
+    `;
+
+    this.run(insStg, params);
+  }
+
+  upsertCarrierStats(params) {
+    const insStg = `INSERT INTO stg_carrierstats
+    (cmdr, jnltime, jsondata)
+    VALUES(?, julianday(?), ?)
+    ON CONFLICT(cmdr) DO UPDATE
+      SET jnltime = excluded.jnltime, jsondata = excluded.jsondata
+    WHERE excluded.jnltime > stg_carrierstats.jnltime 
+    `;
+
+    this.run(insStg, params);
+  }
+
   insertStg(params) {
     const insStg = `INSERT INTO stg_jnl
     (cmdr, jnltime, event, jsondata)

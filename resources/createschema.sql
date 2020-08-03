@@ -35,7 +35,19 @@ CREATE TABLE IF NOT EXISTS stg_fsdjump (
     cmdr TEXT,
     jnltime REAL, 
     jsondata TEXT,
-    CONSTRAINT st_ships_pk PRIMARY KEY (cmdr, jnltime));
+    CONSTRAINT st_fsdj_pk PRIMARY KEY (cmdr, jnltime));
+
+CREATE TABLE IF NOT EXISTS stg_fsssignal (
+    cmdr TEXT,
+    jnltime REAL, 
+    jsondata TEXT,
+    CONSTRAINT st_fsss_pk PRIMARY KEY (cmdr, jnltime));
+
+CREATE TABLE IF NOT EXISTS stg_carrierstats (
+    cmdr TEXT,
+    jnltime REAL, 
+    jsondata TEXT,
+    CONSTRAINT st_carrst_pk PRIMARY KEY (cmdr));
 
 CREATE TABLE engineer (
 	engineer TEXT,
@@ -467,6 +479,32 @@ select f.cmdr, f.jnldate, f.jnltime, f.days_old, ifnull(f."system",'') as "syste
   from fsd f
  inner join latest l on f.system = l.system and f.jnldate = l.jnldate and f.jnltime = l.jnltime
  order by  f.system, f.jnldate desc, f.influence desc;
+
+create view v_system as
+with latest as (
+select json_extract(jsondata,'$.StarSystem') as system, max(jnltime) as jnltime
+ from stg_fsdjump fsd
+group by json_extract(jsondata,'$.StarSystem')
+),
+fsd as (
+select f.jnltime, f.jsondata
+  FROM stg_fsdjump f
+ inner join latest l on l.system = json_extract(f.jsondata,'$.StarSystem')
+                    and l.jnltime = f.jnltime
+)
+select json_extract(jsondata,'$.SystemAddress') as id,
+       json_extract(jsondata,'$.StarSystem') as system,
+       json_extract(jsondata,'$.StarPos') as xyz,
+       json_extract(jsondata,'$.SystemAllegiance') as allegiance,
+       json_extract(jsondata,'$.SystemEconomy_Localised') as economy,
+       json_extract(jsondata,'$.SystemGovernment_Localised') as government,
+       json_extract(jsondata,'$.SystemSecurity_Localised') as security,
+       json_extract(jsondata,'$.Population') as population,
+       json_extract(jsondata,'$.SystemFaction.Name') as cmf,
+       json_extract(jsondata,'$.SystemFaction.FactionState') as state,
+       json_extract(jsondata,'$.Powers[0]') as power,
+       json_extract(jsondata,'$.PowerplayState') as pp_state
+ from fsd;
 
 create view v_conflicts as
 with conf as (
