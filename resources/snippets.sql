@@ -822,32 +822,106 @@ select * from v_system;
 
 select count(*) from v_system;
 
-with mega as (
+with target as (
+SELECT json_extract(m.jsondata,'$.SignalName') as megaship,
+       max(jnltime) as max_jnltime, null as max_jnltime2 
+  FROM stg_fsssignal m
+ where json_extract(m.jsondata,'$.SignalName') like '%-class%'
+ group by json_extract(m.jsondata,'$.SignalName')
+having min(round(julianday('now') - m.jnltime)) < 14 -- only want megaship history for ships seen in last 2 weeks
+UNION 
+SELECT distinct json_extract(m.jsondata,'$.SignalName') as megaship,
+       null as max_jnltime2, max(m.jnltime) as max_jnltime
+  FROM stg_fsssignal m
+ inner join v_system s on s.id = json_extract(m.jsondata,'$.SystemAddress')
+ where json_extract(m.jsondata,'$.SignalName') like '%-class%'
+    and s.cmf = 'Teaka Elite Altruists Bagging Cooperative'
+ group by json_extract(m.jsondata,'$.SignalName')
+),
+mr_mega as (
+select megaship, 
+--       max(max_jnltime) as max_jnltime, max(max_jnltime2) as max_jnltime2   
+       coalesce(max(max_jnltime), max(max_jnltime2)) as max_jnltime   
+  from target group by megaship
+)
+select * from mr_mega;
+
+select * from v_megaship;
+
+drop view v_megaship;
+
+create view v_megaship as 
+with target as (
+SELECT json_extract(m.jsondata,'$.SignalName') as megaship,
+       max(jnltime) as max_jnltime, null as max_jnltime2 
+  FROM stg_fsssignal m
+ where json_extract(m.jsondata,'$.SignalName') like '%-class%'
+ group by json_extract(m.jsondata,'$.SignalName')
+having min(round(julianday('now') - m.jnltime)) < 14 -- only want megaship history for ships seen in last 2 weeks
+UNION 
+SELECT distinct json_extract(m.jsondata,'$.SignalName') as megaship,
+       null as max_jnltime2, max(m.jnltime) as max_jnltime
+  FROM stg_fsssignal m
+ inner join v_system s on s.id = json_extract(m.jsondata,'$.SystemAddress')
+ where json_extract(m.jsondata,'$.SignalName') like '%-class%'
+    and s.cmf = 'Teaka Elite Altruists Bagging Cooperative'
+ group by json_extract(m.jsondata,'$.SignalName')
+),
+mr_mega as (
+select megaship, 
+       coalesce(max(max_jnltime), max(max_jnltime2)) as max_jnltime   
+  from target group by megaship
+),
+mega as (
 SELECT date(sig.jnltime) as jnldate, time(sig.jnltime) as jnltime,
 --       sys.system,
        json_extract(sig.jsondata,'$.SignalName') as megaship,
        json_extract(sig.jsondata,'$.SystemAddress') as system_id,
-       sig.jnltime as ts 
+       sig.jnltime as ts,
+       mrm.max_jnltime
   FROM stg_fsssignal sig
+ inner join mr_mega mrm on mrm.megaship = json_extract(sig.jsondata,'$.SignalName')
+ where round(julianday('now') - sig.jnltime) < 84 -- don't look back > 12 weeks
 ),
 grp as (
-select megaship, system_id, max(jnldate) as last_seen, min(jnldate) as first_seen
+select megaship, system_id, max(jnldate) as last_seen, min(jnldate) as first_seen, max_jnltime
   from mega
- group by megaship, system_id
-)
-select distinct  m.megaship, 
+ group by megaship, system_id, max_jnltime 
+),
+fin as (
+select distinct 
+       m.megaship, 
        s."system",
        m.first_seen, m.last_seen, 
        s.cmf, 
        s.state,
        s.factions as system_factions,
-       round(julianday('now') - s.jnltime) as days_old
---       ,s.jnltime
+       round(julianday('now') - julianday(m.last_seen)) as m_old,
+       round(julianday('now') - s.jnltime) as s_old,
+       date(max_jnltime) as latest,
+         case cast (strftime('%w', julianday(m.last_seen)) as integer)
+  when 0 then 'Sun'
+  when 1 then 'Mon'
+  when 2 then 'Tue'
+  when 3 then '*Wed'
+  when 4 then 'Thu'
+  when 5 then 'Fri'
+  else 'Sat' end day_m
   from grp m
  inner join v_system s on s.id = m.system_id
- where round(julianday('now') - s.jnltime) < 7
- order by megaship, last_seen desc;
+ order by megaship, last_seen desc
+)
+select megaship, "system", (m_old = s_old) as "now", (latest = last_seen) as "latest", 
+       m_old, day_m, s_old, first_seen, last_seen, cmf, state, system_factions
+  from fin;
 
+select * from v_megaship;
+
+select date(jnltime), *
+  FROM stg_fsssignal sig
+where json_extract(jsondata,'$.SignalName') = '63 G. CAPRICORNI I  Lowell-class Researcher'
+order by jnltime desc;
+ 
 select jsondata 
   from stg_fsdjump
  where round(julianday('now') - jnltime) <= 60

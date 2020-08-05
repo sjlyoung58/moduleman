@@ -14,6 +14,7 @@ public/*.html
 # public/mats.html
 public/extracts/*.csv
 public/extracts/*.txt
+public/extracts/*.gz
 
 src/config/config.mjs
 

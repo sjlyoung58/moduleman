@@ -26,25 +26,7 @@ echo extracting $DAYS2 days of csv conflicts data to ./public/extracts/conflicts
 select * from v_conflicts where days_old <= $DAYS2;
 .quit
 EOF
-echo `<./public/extracts/conflicts.csv wc -l` lines of data extracted
-
-CMDR=`./scripts/getMainCmdr.sh`_`date +%a`
-EXJNL=./public/extracts/TourData.991231999999.$CMDR.log
-
-echo extracting 60 days of Tour Data to $EXJNL
-./resources/sqlite3 ./db/journal.sqlite3 <<EOF
-.headers off
-.output $EXJNL
-select jsondata 
-  from stg_fsdjump
- where round(julianday('now') - jnltime) <= 60
-UNION 
-select jsondata 
-  from stg_fsssignal sf 
- where round(julianday('now') - jnltime) <= 60;
-.quit
-EOF
-echo `<$EXJNL wc -l` lines of data extracted
+echo `<./public/extracts/conflicts.csv wc -l` lines of data extracte
 
 echo extracting current conflict summary csv to ./public/extracts/conf_summ.csv
 ./resources/sqlite3 ./db/journal.sqlite3 <<EOF
@@ -64,3 +46,35 @@ select * from v_conflict_pretty;
 .quit
 EOF
 echo `<./public/extracts/conf_summ.txt wc -l` lines of data extracted
+
+echo extracting current megaship summary csv to ./public/extracts/megaship_summ.csv
+./resources/sqlite3 ./db/journal.sqlite3 <<EOF
+.headers on
+.mode csv
+.output ./public/extracts/megaship_summ.csv
+select * from v_megaship;
+.quit
+EOF
+echo `<./public/extracts/megaship_summ.csv wc -l` lines of data extracted
+
+CMDR=`./scripts/getMainCmdr.sh`_`date +%a`
+EXJNL=./public/extracts/TourData.991231999999.$CMDR.log
+echo extracting 60 days of Tour Data to $EXJNL
+./resources/sqlite3 ./db/journal.sqlite3 <<EOF
+.headers off
+.output $EXJNL
+select jsondata 
+  from stg_fsdjump
+ where round(julianday('now') - jnltime) <= 60
+UNION 
+select jsondata 
+  from stg_fsssignal sf 
+ where round(julianday('now') - jnltime) <= 60;
+.quit
+EOF
+echo `<$EXJNL wc -l` lines of data extracted
+
+echo compressing $EXJNL to $EXJNL.gz using gzip...
+gzip -kf $EXJNL
+gzip -l $EXJNL.gz
+echo ...to decompress use 'gzip -d <filename>' in git bash or install 7-Zip from the Windows Store [free]
