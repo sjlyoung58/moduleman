@@ -823,15 +823,21 @@ select * from v_system;
 select count(*) from v_system;
 
 with target as (
+-- megaship history for ships seen in last 2 weeks
 SELECT json_extract(m.jsondata,'$.SignalName') as megaship,
-       max(jnltime) as max_jnltime, null as max_jnltime2 
+       max(jnltime) as max_jnltime, 
+       null as max_jnltime2,
+       0 as teabc
   FROM stg_fsssignal m
  where json_extract(m.jsondata,'$.SignalName') like '%-class%'
  group by json_extract(m.jsondata,'$.SignalName')
-having min(round(julianday('now') - m.jnltime)) < 14 -- only want megaship history for ships seen in last 2 weeks
+having min(round(julianday('now') - m.jnltime)) < 14
 UNION 
+-- megaship history for ships that visit TEABC systems
 SELECT distinct json_extract(m.jsondata,'$.SignalName') as megaship,
-       null as max_jnltime2, max(m.jnltime) as max_jnltime
+       null as max_jnltime, 
+       max(m.jnltime) as max_jnltime2,
+       1 as teabc
   FROM stg_fsssignal m
  inner join v_system s on s.id = json_extract(m.jsondata,'$.SystemAddress')
  where json_extract(m.jsondata,'$.SignalName') like '%-class%'
@@ -841,26 +847,34 @@ SELECT distinct json_extract(m.jsondata,'$.SignalName') as megaship,
 mr_mega as (
 select megaship, 
 --       max(max_jnltime) as max_jnltime, max(max_jnltime2) as max_jnltime2   
-       coalesce(max(max_jnltime), max(max_jnltime2)) as max_jnltime   
+       coalesce(max(max_jnltime), max(max_jnltime2)) as max_jnltime,
+       max(teabc) as teabc
   from target group by megaship
 )
 select * from mr_mega;
 
-select * from v_megaship;
+select * from v_megaship
+ where teabc;
 
 drop view v_megaship;
 
 create view v_megaship as 
 with target as (
+-- megaship history for ships seen in last 2 weeks
 SELECT json_extract(m.jsondata,'$.SignalName') as megaship,
-       max(jnltime) as max_jnltime, null as max_jnltime2 
+       max(jnltime) as max_jnltime, 
+       null as max_jnltime2,
+       0 as teabc
   FROM stg_fsssignal m
  where json_extract(m.jsondata,'$.SignalName') like '%-class%'
  group by json_extract(m.jsondata,'$.SignalName')
-having min(round(julianday('now') - m.jnltime)) < 14 -- only want megaship history for ships seen in last 2 weeks
+having min(round(julianday('now') - m.jnltime)) < 14
 UNION 
+-- megaship history for ships that visit TEABC systems
 SELECT distinct json_extract(m.jsondata,'$.SignalName') as megaship,
-       null as max_jnltime2, max(m.jnltime) as max_jnltime
+       null as max_jnltime, 
+       max(m.jnltime) as max_jnltime2,
+       1 as teabc
   FROM stg_fsssignal m
  inner join v_system s on s.id = json_extract(m.jsondata,'$.SystemAddress')
  where json_extract(m.jsondata,'$.SignalName') like '%-class%'
@@ -869,7 +883,9 @@ SELECT distinct json_extract(m.jsondata,'$.SignalName') as megaship,
 ),
 mr_mega as (
 select megaship, 
-       coalesce(max(max_jnltime), max(max_jnltime2)) as max_jnltime   
+--       max(max_jnltime) as max_jnltime, max(max_jnltime2) as max_jnltime2   
+       coalesce(max(max_jnltime), max(max_jnltime2)) as max_jnltime,
+       max(teabc) as teabc
   from target group by megaship
 ),
 mega as (
@@ -878,13 +894,14 @@ SELECT date(sig.jnltime) as jnldate, time(sig.jnltime) as jnltime,
        json_extract(sig.jsondata,'$.SignalName') as megaship,
        json_extract(sig.jsondata,'$.SystemAddress') as system_id,
        sig.jnltime as ts,
-       mrm.max_jnltime
+       mrm.max_jnltime,
+       mrm.teabc
   FROM stg_fsssignal sig
  inner join mr_mega mrm on mrm.megaship = json_extract(sig.jsondata,'$.SignalName')
  where round(julianday('now') - sig.jnltime) < 84 -- don't look back > 12 weeks
 ),
 grp as (
-select megaship, system_id, max(jnldate) as last_seen, min(jnldate) as first_seen, max_jnltime
+select megaship, system_id, max(jnldate) as last_seen, min(jnldate) as first_seen, max_jnltime, teabc
   from mega
  group by megaship, system_id, max_jnltime 
 ),
@@ -899,20 +916,21 @@ select distinct
        round(julianday('now') - julianday(m.last_seen)) as m_old,
        round(julianday('now') - s.jnltime) as s_old,
        date(max_jnltime) as latest,
-         case cast (strftime('%w', julianday(m.last_seen)) as integer)
-  when 0 then 'Sun'
-  when 1 then 'Mon'
-  when 2 then 'Tue'
-  when 3 then '*Wed'
-  when 4 then 'Thu'
-  when 5 then 'Fri'
-  else 'Sat' end day_m
+       m.teabc,
+       case cast (strftime('%w', julianday(m.last_seen)) as integer)
+         when 0 then 'Sun'
+         when 1 then 'Mon'
+         when 2 then 'Tue'
+         when 3 then '*Wed'
+         when 4 then 'Thu'
+         when 5 then 'Fri'
+       else 'Sat' end day_m
   from grp m
  inner join v_system s on s.id = m.system_id
  order by megaship, last_seen desc
 )
 select megaship, "system", (m_old = s_old) as "now", (latest = last_seen) as "latest", 
-       m_old, day_m, s_old, first_seen, last_seen, cmf, state, system_factions
+       m_old, day_m, s_old, teabc, first_seen, last_seen, cmf, state, system_factions
   from fin;
 
 select * from v_megaship;
