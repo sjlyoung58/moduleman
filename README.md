@@ -2,11 +2,16 @@
 This node js project analyses your Elite Dangerous journals
 and produces handy references for all of your ships and modules
 ## Current status
-Currently only one output is created - a list of your ships with
-links to coriolis.io website
+Currently the following output is created
+- list of your ships with links to coriolis.io website
+- list of your stored modules ordered sensibly. Engineering blueprint name, level and quality are shown but not experimental effect (not in the journal)
+- list of the modules on all of your ships ordered sensibly and with full engineering details
+- list of Materials you have
+- FSD Jump recent history (systems & faction states)
+- details of all conflicts in recently visited systems
 
 The system is designed to run by default on the same Windows PC you use to
-run Elite Dangerous. If you want to run it on a different machine, you probably know what you are doing, so it isn't covered here
+run Elite Dangerous. If you want to run it on a different machine, you can edit the default config in src/config/config.mjs to point to a non-standard location for your journals (e.g. a drive mapped from another PC)
 
 # Getting started
 
@@ -30,14 +35,20 @@ Once nvm is installed successfully, use nvm in a command prompt to install node 
 
 `nvm use 12.16.3`
 
-## Copy this project to your PC
+## Install Git for Windows (if you don't already have it)
 
-If you are reading this guide, you are probably on the right page on github to
-download a copy of this project
+Download git here https://gitforwindows.org/ and install it with all the default settings
 
-<img src="./images/down_zip.png" alt="Download a zip of the project" width="20%"/>
+## Clone this project to your PC
 
-Extract the contents of the zip to a location of your choice on your PC
+Create a folder to contain this and any other git projects, or choose an existing suitable one
+
+Open a command prompt and 
+```
+cd <folder>
+git clone https://github.com/sjlyoung58/moduleman.git
+```
+This will create `<folder>\moduleman` containing all the project code 
 
 ## Running the code
 ### First time only (or whenever a new version is downloaded)
@@ -66,3 +77,13 @@ This will analyse your journals and create web pages of all your ships, modules 
 `.\scripts\run.bat` will also open `.\public\index.html` in your default browser automatically
 
 You can refresh your output file every time your journals change by rerunning `.\scripts\run.bat`
+
+As well as the HTML output described above, the system can produce various extracts that you can load into Google Sheets, Excel (or any other suitable program) so you can make your own analysis of the data taken from your journal. To do this you will need to run a Linux bash script which you can do using Git Bash that was installed alongside Git. To do this, right click on your 'moduleman' project folder in Windows Explorer and choose 'Git Bash Here', this will open a Git Bash prompt, in this prompt run the following
+
+```./scripts/extrun.sh```
+
+This will run the journal analysis code and then also produce various extracts in `moduleman\public\extracts`
+
+### Exploring the Sqlite Database
+
+If you know SQL and wish to explore the database created by this project, I recommend using DBeaver (community edition) which can be downloaded for free from https://dbeaver.io/ or can be installed from the Windows Store
