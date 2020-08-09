@@ -80,9 +80,9 @@ class AppDAO {
 
   upsertFSSSignalDiscovered(params) {
     const insStg = `INSERT INTO stg_fsssignal
-    (cmdr, jnltime, jsondata)
-    VALUES(?, julianday(?), ?)
-    ON CONFLICT(cmdr, jnltime) DO NOTHING
+    (cmdr, signal, jnltime, jsondata)
+    VALUES(?, ?, julianday(?), ?)
+    ON CONFLICT(cmdr, signal, jnltime) DO NOTHING
     `;
 
     this.run(insStg, params);

@@ -97,7 +97,7 @@ function processJournal(file) {
         break;
       case 'FSSSignalDiscovered':
         if ((daysOld < 60) && (JSON.stringify(entry.SignalName).includes('-class'))) {
-          dao.upsertFSSSignalDiscovered([cmdr, ts, line]);
+          dao.upsertFSSSignalDiscovered([cmdr, entry.SignalName, ts, line]);
           process.stdout.write('S');
           // console.log('FSSSignalDiscovered ', daysOld);
         }

@@ -935,6 +935,14 @@ select megaship, "system", (m_old = s_old) as "now", (latest = last_seen) as "la
 
 select * from v_megaship;
 
+select * from v_megaship where system = 'UGP 619' ORDER BY SYSTEM, megaship;
+
+select count(*)   FROM stg_fsssignal sig;
+
+select *   FROM stg_fsssignal sig;
+
+select *   FROM stg_fsssignal sig where signal like 'DAR-400%';
+
 select date(jnltime), *
   FROM stg_fsssignal sig
 where json_extract(jsondata,'$.SignalName') = '63 G. CAPRICORNI I  Lowell-class Researcher'

@@ -39,9 +39,10 @@ CREATE TABLE IF NOT EXISTS stg_fsdjump (
 
 CREATE TABLE IF NOT EXISTS stg_fsssignal (
     cmdr TEXT,
+    signal TEXT,
     jnltime REAL, 
     jsondata TEXT,
-    CONSTRAINT st_fsss_pk PRIMARY KEY (cmdr, jnltime));
+    CONSTRAINT st_fsss_pk PRIMARY KEY (cmdr, signal, jnltime));
 
 CREATE TABLE IF NOT EXISTS stg_carrierstats (
     cmdr TEXT,
