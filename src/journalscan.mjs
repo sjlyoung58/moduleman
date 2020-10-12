@@ -23,7 +23,7 @@ function processJournals(startFrom) {
         const nameParts = file.split('.');
         // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
         // only process Journal, not JournalBeta
-        if (['Journal', 'TourData'].includes(nameParts[0]) && nameParts[1] > startFrom) {
+        if (['Journal', 'TourData'].includes(nameParts[0]) && nameParts[1] >= startFrom) {
           processJournal(`${config.jnl.path}${file}`);
         } else {
           // console.log(`${file} rejected`);
@@ -126,7 +126,7 @@ async function main() {
   await dao.init();
   const latestFsd = await dao.all('select * from v_latest_fsd', []);
   console.log(`Latest FSDJump processed from ${latestFsd[0].latest_fsd}, scan type ${latestFsd[0].scan_type}`
-           + `, processing journals > ${latestFsd[0].jnl_from}`);
+           + `, processing journals >= ${latestFsd[0].jnl_from}`);
   processJournals(latestFsd[0].jnl_from);
 }
 
