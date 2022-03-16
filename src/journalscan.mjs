@@ -23,7 +23,10 @@ function processJournals(startFrom) {
         const nameParts = file.split('.');
         // only process 27 Feb 2018 midday onwards 3.0 ED: Beyond – Chapter One
         // only process Journal, not JournalBeta
-        if (['Journal', 'TourData'].includes(nameParts[0]) && nameParts[1] >= startFrom) {
+
+        // allow for new filename timestamp format introduced for Odyssey in update 11 2022/03/15
+
+        if (['Journal', 'TourData'].includes(nameParts[0]) && filenameDateTime(nameParts[1]) >= startFrom) {
           processJournal(`${config.jnl.path}${file}`);
         } else {
           // console.log(`${file} rejected`);
@@ -31,6 +34,20 @@ function processJournals(startFrom) {
       });
     }
   });
+}
+
+function filenameDateTime(dateTimePart) {
+  // old format Journal.220315215020.01.log
+  // new format Journal.2022-03-15T203105.01.log
+  //                      ** ** ** ******
+  //                    01234567890123456
+  if (dateTimePart.substring(10, 11) === 'T') {
+    const translated = `${dateTimePart.substring(2, 4)}${dateTimePart.substring(5, 7)}${dateTimePart.substring(8, 10)}${dateTimePart.substring(11, 17)}`;
+    console.log(`new style name found ${dateTimePart}, using ${translated} for qualification`);
+    return translated;
+  }
+
+  return dateTimePart;
 }
 
 function daysDiff(timestamp1, timestamp2) {
