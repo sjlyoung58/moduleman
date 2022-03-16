@@ -1094,3 +1094,7 @@ select cmdr, ship_id, shiptype, shipname, star, slot_type, slot, item_group, ite
 
 SELECT *
 FROM v_ship_modules;
+
+SELECT id, "system", xyz, allegiance, economy, government, "security", population, cmf, factions, state, power, pp_state, jnltime
+FROM v_system where system like 'Teaka';
+
