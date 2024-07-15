@@ -22,6 +22,6 @@ IF EXIST db\journal.sqlite3 (
 )
 
 echo creating new database
-sqlite3 ./db/journal.sqlite3 < ./schema/createtables.sql
-sqlite3 ./db/journal.sqlite3 < ./schema/createviews.sql
+./resources/sqlite3 ./db/journal.sqlite3 < ./schema/createtables.sql
+./resources/sqlite3 ./db/journal.sqlite3 < ./schema/createviews.sql
 rem .\resources\sqlite3 .\db\journal.sqlite3 < .\resources\dbcheck.sql
